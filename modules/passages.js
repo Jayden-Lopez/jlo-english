@@ -11,6 +11,33 @@ window.PassagesModule = (function() {
     let sessionCorrect = 0;
     let sessionTotal = 0;
     
+    // Adaptive passage selection based on weak skills
+    function selectAdaptivePassage(gradeLevel, weakAreas) {
+        let allPassages = passages[gradeLevel] || passages.grade4;
+        
+        // Add expanded passages if available
+        if (window.PassagesExpanded && window.PassagesExpanded[gradeLevel]) {
+            allPassages = [...allPassages, ...window.PassagesExpanded[gradeLevel]];
+        }
+        
+        // If there are weak areas, try to find passages that target those skills
+        if (weakAreas && weakAreas.length > 0) {
+            const targetSkills = weakAreas.slice(0, 2).map(area => area.skill);
+            
+            // Find passages with questions targeting weak skills
+            const targetedPassages = allPassages.filter(passage => 
+                passage.questions.some(q => targetSkills.includes(q.skill))
+            );
+            
+            if (targetedPassages.length > 0) {
+                return targetedPassages[Math.floor(Math.random() * targetedPassages.length)];
+            }
+        }
+        
+        // Otherwise, return random passage
+        return allPassages[Math.floor(Math.random() * allPassages.length)];
+    }
+    
     // Grade-appropriate passages with skill tags
     const passages = {
         grade4: [
@@ -243,10 +270,8 @@ window.PassagesModule = (function() {
         const weakAreas = window.MasteryTracker ? 
             window.MasteryTracker.getWeakAreas('comprehension') : [];
         
-        // Select passage based on weak areas or randomly
-        const gradePassages = passages[currentGrade] || passages.grade4;
-        currentPassageIndex = Math.floor(Math.random() * gradePassages.length);
-        currentPassage = gradePassages[currentPassageIndex];
+        // Use adaptive selection to choose passage targeting weak skills
+        currentPassage = selectAdaptivePassage(currentGrade, weakAreas);
         
         currentQuestionIndex = 0;
         sessionCorrect = 0;
