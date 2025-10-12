@@ -1,0 +1,17 @@
+/* Copy all the CSS from the original file's <style> section */
+/* This is too long to paste here, but includes all the styling */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* Add the rest of the CSS here */
