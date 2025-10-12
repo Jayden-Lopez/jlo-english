@@ -1,263 +1,269 @@
-// achievements.js - Achievements and Rewards Module
+// achievements.js - Enhanced Achievement System with Skill-Based Achievements
 
 window.AchievementsModule = (function() {
     'use strict';
     
-    // Achievement definitions
-    const achievements = {
-        // Streak achievements
-        streak5: {
-            id: 'streak5',
-            name: '5-Answer Streak!',
-            description: 'Got 5 correct answers in a row',
-            icon: '🔥',
-            points: 50,
-            trigger: (userData) => userData.currentStreak >= 5
-        },
-        streak10: {
-            id: 'streak10',
-            name: '10-Answer Streak!',
-            description: 'Got 10 correct answers in a row',
-            icon: '🔥🔥',
-            points: 100,
-            trigger: (userData) => userData.currentStreak >= 10
-        },
-        streak20: {
-            id: 'streak20',
-            name: 'On Fire!',
-            description: 'Got 20 correct answers in a row',
-            icon: '🔥🔥🔥',
-            points: 200,
-            trigger: (userData) => userData.currentStreak >= 20
-        },
-        
-        // Reading achievements
-        passages5: {
-            id: 'passages5',
-            name: 'Reader',
-            description: 'Read 5 passages',
+    // Define all achievements
+    const ACHIEVEMENTS = {
+        // Reading Comprehension Achievements
+        firstPassage: {
+            id: 'firstPassage',
+            name: 'First Steps',
+            description: 'Complete your first reading passage',
             icon: '📖',
-            points: 50,
-            trigger: (userData) => userData.passagesRead >= 5
+            points: 10,
+            check: (userData) => userData.passagesRead >= 1
         },
         passages10: {
             id: 'passages10',
             name: 'Bookworm',
             description: 'Read 10 passages',
-            icon: '📚',
-            points: 100,
-            trigger: (userData) => userData.passagesRead >= 10
+            icon: '🐛',
+            points: 25,
+            check: (userData) => userData.passagesRead >= 10
         },
         passages25: {
             id: 'passages25',
             name: 'Reading Champion',
             description: 'Read 25 passages',
-            icon: '📚🏆',
-            points: 250,
-            trigger: (userData) => userData.passagesRead >= 25
+            icon: '🏆',
+            points: 50,
+            check: (userData) => userData.passagesRead >= 25
         },
         passages50: {
             id: 'passages50',
-            name: 'Super Reader',
+            name: 'Literature Master',
             description: 'Read 50 passages',
-            icon: '📚⭐',
-            points: 500,
-            trigger: (userData) => userData.passagesRead >= 50
-        },
-        
-        // Vocabulary achievements
-        words10: {
-            id: 'words10',
-            name: 'Vocabulary Builder',
-            description: 'Learned 10 new words',
-            icon: '🔤',
-            points: 50,
-            trigger: (userData) => userData.wordsLearned.length >= 10
-        },
-        words25: {
-            id: 'words25',
-            name: 'Word Master',
-            description: 'Learned 25 new words',
-            icon: '🔤⭐',
+            icon: '📚',
             points: 100,
-            trigger: (userData) => userData.wordsLearned.length >= 25
-        },
-        words50: {
-            id: 'words50',
-            name: 'Vocabulary Expert',
-            description: 'Learned 50 new words',
-            icon: '🔤🏆',
-            points: 250,
-            trigger: (userData) => userData.wordsLearned.length >= 50
+            check: (userData) => userData.passagesRead >= 50
         },
         
-        // Accuracy achievements
-        accuracy80: {
-            id: 'accuracy80',
-            name: 'Sharp Mind',
-            description: 'Achieved 80% accuracy (20+ questions)',
+        // Skill Mastery Achievements
+        masteredMainIdea: {
+            id: 'masteredMainIdea',
+            name: 'Main Idea Master',
+            description: 'Master the Main Ideas skill',
             icon: '🎯',
+            points: 30,
+            check: (userData) => {
+                if (!window.MasteryTracker) return false;
+                return window.MasteryTracker.isSkillMastered('comprehension', 'mainIdea');
+            }
+        },
+        masteredCauseEffect: {
+            id: 'masteredCauseEffect',
+            name: 'Cause & Effect Expert',
+            description: 'Master the Cause & Effect skill',
+            icon: '⚡',
+            points: 30,
+            check: (userData) => {
+                if (!window.MasteryTracker) return false;
+                return window.MasteryTracker.isSkillMastered('comprehension', 'causeEffect');
+            }
+        },
+        masteredInference: {
+            id: 'masteredInference',
+            name: 'Inference Detective',
+            description: 'Master the Making Inferences skill',
+            icon: '🔍',
+            points: 35,
+            check: (userData) => {
+                if (!window.MasteryTracker) return false;
+                return window.MasteryTracker.isSkillMastered('comprehension', 'inference');
+            }
+        },
+        masteredVocabulary: {
+            id: 'masteredVocabulary',
+            name: 'Vocabulary Virtuoso',
+            description: 'Master the Context Clues skill',
+            icon: '💬',
+            points: 30,
+            check: (userData) => {
+                if (!window.MasteryTracker) return false;
+                return window.MasteryTracker.isSkillMastered('comprehension', 'vocabulary');
+            }
+        },
+        masteredSequence: {
+            id: 'masteredSequence',
+            name: 'Sequence Specialist',
+            description: 'Master the Sequence of Events skill',
+            icon: '🔢',
+            points: 25,
+            check: (userData) => {
+                if (!window.MasteryTracker) return false;
+                return window.MasteryTracker.isSkillMastered('comprehension', 'sequence');
+            }
+        },
+        masteredCharacter: {
+            id: 'masteredCharacter',
+            name: 'Character Analyst',
+            description: 'Master the Character Analysis skill',
+            icon: '👤',
+            points: 35,
+            check: (userData) => {
+                if (!window.MasteryTracker) return false;
+                return window.MasteryTracker.isSkillMastered('comprehension', 'characterAnalysis');
+            }
+        },
+        masteredTheme: {
+            id: 'masteredTheme',
+            name: 'Theme Thinker',
+            description: 'Master the Themes & Messages skill',
+            icon: '💡',
+            points: 35,
+            check: (userData) => {
+                if (!window.MasteryTracker) return false;
+                return window.MasteryTracker.isSkillMastered('comprehension', 'theme');
+            }
+        },
+        
+        // Grade Level Achievements
+        mastered4thGrade: {
+            id: 'mastered4thGrade',
+            name: '4th Grade Champion',
+            description: 'Master all skills at 4th grade level',
+            icon: '🥉',
             points: 100,
-            trigger: (userData) => {
-                const accuracy = userData.totalQuestions > 0 ? 
-                    (userData.correctAnswers / userData.totalQuestions) * 100 : 0;
-                return accuracy >= 80 && userData.totalQuestions >= 20;
+            check: (userData) => {
+                if (!window.MasteryTracker) return false;
+                return window.MasteryTracker.isLevelMastered('comprehension', 'grade4');
+            }
+        },
+        mastered5thGrade: {
+            id: 'mastered5thGrade',
+            name: '5th Grade Hero',
+            description: 'Master all skills at 5th grade level',
+            icon: '🥈',
+            points: 150,
+            check: (userData) => {
+                if (!window.MasteryTracker) return false;
+                return window.MasteryTracker.isLevelMastered('comprehension', 'grade5');
+            }
+        },
+        mastered6thGrade: {
+            id: 'mastered6thGrade',
+            name: '6th Grade Legend',
+            description: 'Master all skills at 6th grade level',
+            icon: '🥇',
+            points: 200,
+            check: (userData) => {
+                if (!window.MasteryTracker) return false;
+                return window.MasteryTracker.isLevelMastered('comprehension', 'grade6');
+            }
+        },
+        
+        // Streak Achievements
+        streak5: {
+            id: 'streak5',
+            name: 'On Fire!',
+            description: 'Get 5 correct answers in a row',
+            icon: '🔥',
+            points: 15,
+            check: (userData) => userData.currentStreak >= 5
+        },
+        streak10: {
+            id: 'streak10',
+            name: 'Unstoppable!',
+            description: 'Get 10 correct answers in a row',
+            icon: '⚡',
+            points: 30,
+            check: (userData) => userData.currentStreak >= 10
+        },
+        streak20: {
+            id: 'streak20',
+            name: 'Legendary Streak',
+            description: 'Get 20 correct answers in a row',
+            icon: '🌟',
+            points: 60,
+            check: (userData) => userData.currentStreak >= 20
+        },
+        
+        // Accuracy Achievements
+        perfect10: {
+            id: 'perfect10',
+            name: 'Perfect 10',
+            description: 'Answer 10 questions with 100% accuracy',
+            icon: '💯',
+            points: 25,
+            check: (userData) => {
+                return userData.totalQuestions >= 10 && 
+                       userData.correctAnswers === userData.totalQuestions;
             }
         },
         accuracy90: {
             id: 'accuracy90',
-            name: 'Accuracy Expert',
-            description: 'Achieved 90% accuracy (20+ questions)',
-            icon: '🎯⭐',
-            points: 200,
-            trigger: (userData) => {
-                const accuracy = userData.totalQuestions > 0 ? 
-                    (userData.correctAnswers / userData.totalQuestions) * 100 : 0;
-                return accuracy >= 90 && userData.totalQuestions >= 20;
-            }
-        },
-        accuracy95: {
-            id: 'accuracy95',
-            name: 'Perfectionist',
-            description: 'Achieved 95% accuracy (50+ questions)',
-            icon: '🎯🏆',
-            points: 500,
-            trigger: (userData) => {
-                const accuracy = userData.totalQuestions > 0 ? 
-                    (userData.correctAnswers / userData.totalQuestions) * 100 : 0;
-                return accuracy >= 95 && userData.totalQuestions >= 50;
-            }
-        },
-        
-        // Topic mastery achievements
-        comprehensionMaster: {
-            id: 'comprehensionMaster',
-            name: 'Reading Comprehension Master',
-            description: 'Completed 20 comprehension activities',
-            icon: '📖🏆',
-            points: 200,
-            trigger: (userData) => {
-                const progress = userData.topicProgress.comprehension;
-                return progress && progress.completed >= 20;
-            }
-        },
-        vocabularyMaster: {
-            id: 'vocabularyMaster',
-            name: 'Vocabulary Master',
-            description: 'Completed 20 vocabulary activities',
-            icon: '🔤🏆',
-            points: 200,
-            trigger: (userData) => {
-                const progress = userData.topicProgress.vocabulary;
-                return progress && progress.completed >= 20;
-            }
-        },
-        writingMaster: {
-            id: 'writingMaster',
-            name: 'Writing Master',
-            description: 'Completed 20 writing activities',
-            icon: '✍️🏆',
-            points: 200,
-            trigger: (userData) => {
-                const progress = userData.topicProgress.writing;
-                return progress && progress.completed >= 20;
-            }
-        },
-        grammarMaster: {
-            id: 'grammarMaster',
-            name: 'Grammar Master',
-            description: 'Completed 20 grammar activities',
-            icon: '📝🏆',
-            points: 200,
-            trigger: (userData) => {
-                const progress = userData.topicProgress.grammar;
-                return progress && progress.completed >= 20;
-            }
-        },
-        
-        // Daily goal achievements
-        dailyGoal: {
-            id: 'dailyGoal',
-            name: 'Daily Goal Reached',
-            description: 'Completed daily practice goal',
-            icon: '✅',
+            name: 'Excellence',
+            description: 'Maintain 90%+ accuracy over 50 questions',
+            icon: '⭐',
             points: 50,
-            trigger: (userData) => userData.completedToday >= (userData.dailyGoal || 10)
+            check: (userData) => {
+                return userData.totalQuestions >= 50 && 
+                       (userData.correctAnswers / userData.totalQuestions) >= 0.90;
+            }
         },
-        weekStreak: {
-            id: 'weekStreak',
+        
+        // Daily Goals
+        daily7days: {
+            id: 'daily7days',
             name: 'Week Warrior',
-            description: 'Met daily goal for 7 days in a row',
-            icon: '📅⭐',
+            description: 'Complete your daily goal for 7 days in a row',
+            icon: '📅',
+            points: 40,
+            check: (userData) => {
+                // This would need streak tracking - simplified for now
+                return userData.completedToday >= userData.dailyGoal;
+            }
+        },
+        
+        // Vocabulary
+        words25: {
+            id: 'words25',
+            name: 'Word Collector',
+            description: 'Learn 25 new vocabulary words',
+            icon: '📝',
+            points: 30,
+            check: (userData) => userData.wordsLearned.length >= 25
+        },
+        words50: {
+            id: 'words50',
+            name: 'Vocabulary Expert',
+            description: 'Learn 50 new vocabulary words',
+            icon: '📖',
+            points: 60,
+            check: (userData) => userData.wordsLearned.length >= 50
+        },
+        
+        // Topic Mastery
+        topicMaster1: {
+            id: 'topicMaster1',
+            name: 'Topic Champion',
+            description: 'Master your first topic',
+            icon: '🎖️',
+            points: 50,
+            check: (userData) => {
+                return userData.masteredTopics && userData.masteredTopics.length >= 1;
+            }
+        },
+        allTopicsMastered: {
+            id: 'allTopicsMastered',
+            name: 'Ultimate Master',
+            description: 'Master all available topics',
+            icon: '👑',
             points: 300,
-            trigger: (userData) => false // This would need date tracking
-        },
-        
-        // Special achievements
-        soccerFan: {
-            id: 'soccerFan',
-            name: 'Soccer Scholar',
-            description: 'Read 10 soccer-themed passages',
-            icon: '⚽📚',
-            points: 100,
-            trigger: (userData) => false // Would need to track theme
-        },
-        earlyBird: {
-            id: 'earlyBird',
-            name: 'Early Bird',
-            description: 'Practiced before 8 AM',
-            icon: '🌅',
-            points: 50,
-            trigger: (userData) => {
-                const hour = new Date().getHours();
-                return hour < 8;
+            check: (userData) => {
+                if (!window.topics) return false;
+                const totalTopics = Object.keys(window.topics).length;
+                return userData.masteredTopics && userData.masteredTopics.length >= totalTopics;
             }
-        },
-        nightOwl: {
-            id: 'nightOwl',
-            name: 'Night Owl',
-            description: 'Practiced after 8 PM',
-            icon: '🦉',
-            points: 50,
-            trigger: (userData) => {
-                const hour = new Date().getHours();
-                return hour >= 20;
-            }
-        },
-        
-        // Milestone achievements
-        questions100: {
-            id: 'questions100',
-            name: 'Century Club',
-            description: 'Answered 100 questions total',
-            icon: '💯',
-            points: 100,
-            trigger: (userData) => userData.totalQuestions >= 100
-        },
-        questions500: {
-            id: 'questions500',
-            name: 'Question Master',
-            description: 'Answered 500 questions total',
-            icon: '💯⭐',
-            points: 500,
-            trigger: (userData) => userData.totalQuestions >= 500
-        },
-        questions1000: {
-            id: 'questions1000',
-            name: 'Question Legend',
-            description: 'Answered 1000 questions total',
-            icon: '💯🏆',
-            points: 1000,
-            trigger: (userData) => userData.totalQuestions >= 1000
         }
     };
     
     // Check for new achievements
-    function checkAchievements(userData, currentTopic, topics) {
+    function checkAchievements(userData) {
         if (!userData.achievements) {
             userData.achievements = [];
         }
-        
         if (!userData.achievementPoints) {
             userData.achievementPoints = 0;
         }
@@ -265,146 +271,194 @@ window.AchievementsModule = (function() {
         const newAchievements = [];
         
         // Check each achievement
-        for (const [key, achievement] of Object.entries(achievements)) {
+        for (const [key, achievement] of Object.entries(ACHIEVEMENTS)) {
             // Skip if already earned
             if (userData.achievements.includes(achievement.id)) {
                 continue;
             }
             
-            // Check if triggered
-            if (achievement.trigger(userData)) {
+            // Check if earned now
+            if (achievement.check(userData)) {
                 userData.achievements.push(achievement.id);
                 userData.achievementPoints += achievement.points;
                 newAchievements.push(achievement);
             }
         }
         
-        // Show notifications for new achievements
+        // Show new achievements
         if (newAchievements.length > 0) {
-            showMultipleAchievements(newAchievements);
+            showNewAchievements(newAchievements);
             window.saveUserData();
         }
-        
-        // Check for topic mastery
-        checkTopicMastery(userData, currentTopic, topics);
     }
     
-    // Check if a topic has been mastered
-    function checkTopicMastery(userData, currentTopic, topics) {
-        if (!userData.masteredTopics) {
-            userData.masteredTopics = [];
-        }
-        
-        // Check current topic for mastery
-        if (currentTopic && topics[currentTopic]) {
-            const progress = userData.topicProgress[currentTopic];
-            if (progress && progress.completed >= 20 && !userData.masteredTopics.includes(currentTopic)) {
-                userData.masteredTopics.push(currentTopic);
-                showAchievement(
-                    'Topic Mastered!',
-                    `You've mastered ${topics[currentTopic].name}! 🏆`
-                );
-                window.saveUserData();
-            }
-        }
+    // Show new achievement popup
+    function showNewAchievements(achievements) {
+        achievements.forEach((achievement, index) => {
+            setTimeout(() => {
+                showAchievementPopup(achievement);
+            }, index * 3000); // Stagger by 3 seconds if multiple
+        });
     }
     
-    // Show achievement notification
-    function showAchievement(title, message) {
+    // Show single achievement popup
+    function showAchievementPopup(achievement) {
         const popup = document.getElementById('achievementPopup');
-        if (popup) {
-            const titleEl = popup.querySelector('.achievement-title');
-            const messageEl = document.getElementById('achievementMessage');
-            
-            if (titleEl) titleEl.textContent = title;
-            if (messageEl) messageEl.textContent = message;
-            
-            popup.style.display = 'block';
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                popup.style.display = 'none';
-            }, 5000);
-        } else {
-            // Fallback to alert if popup doesn't exist
-            alert(`🏆 ${title}\n${message}`);
-        }
+        if (!popup) return;
+        
+        const icon = popup.querySelector('.achievement-icon');
+        const title = popup.querySelector('.achievement-title');
+        const message = document.getElementById('achievementMessage');
+        
+        if (icon) icon.textContent = achievement.icon;
+        if (title) title.textContent = achievement.name;
+        if (message) message.innerHTML = `
+            ${achievement.description}<br>
+            <strong>+${achievement.points} points!</strong>
+        `;
+        
+        popup.style.display = 'block';
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            popup.style.display = 'none';
+        }, 5000);
     }
     
-    // Show multiple achievements
-    function showMultipleAchievements(achievementsList) {
-        if (achievementsList.length === 0) return;
-        
-        // Show first achievement
-        const first = achievementsList[0];
-        showAchievement(
-            `${first.icon} ${first.name}`,
-            `${first.description}\n+${first.points} points!`
-        );
-        
-        // Queue remaining achievements
-        for (let i = 1; i < achievementsList.length; i++) {
-            setTimeout(() => {
-                const achievement = achievementsList[i];
-                showAchievement(
-                    `${achievement.icon} ${achievement.name}`,
-                    `${achievement.description}\n+${achievement.points} points!`
-                );
-            }, i * 3000); // Show each achievement 3 seconds apart
-        }
-    }
-    
-    // Get list of all achievements with status
+    // Get all achievements with earned status
     function getAllAchievements(userData) {
-        const achievementList = [];
+        if (!userData.achievements) {
+            userData.achievements = [];
+        }
         
-        for (const [key, achievement] of Object.entries(achievements)) {
-            achievementList.push({
-                ...achievement,
-                earned: userData.achievements?.includes(achievement.id) || false,
-                progress: getAchievementProgress(achievement, userData)
+        return Object.values(ACHIEVEMENTS).map(achievement => ({
+            ...achievement,
+            earned: userData.achievements.includes(achievement.id)
+        }));
+    }
+    
+    // Get achievement stats
+    function getAchievementStats(userData) {
+        const all = Object.values(ACHIEVEMENTS);
+        const earned = userData.achievements ? userData.achievements.length : 0;
+        const total = all.length;
+        const points = userData.achievementPoints || 0;
+        const maxPoints = all.reduce((sum, ach) => sum + ach.points, 0);
+        
+        return {
+            earned,
+            total,
+            points,
+            maxPoints,
+            percentage: Math.round((earned / total) * 100)
+        };
+    }
+    
+    // Show achievements gallery
+    function showAchievementsGallery() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'achievementsGallery';
+        modal.style.display = 'flex';
+        
+        const stats = getAchievementStats(window.userData);
+        const achievements = getAllAchievements(window.userData);
+        
+        // Group achievements by category
+        const categories = {
+            'Reading Progress': ['firstPassage', 'passages10', 'passages25', 'passages50'],
+            'Skill Mastery': ['masteredMainIdea', 'masteredCauseEffect', 'masteredInference', 
+                             'masteredVocabulary', 'masteredSequence', 'masteredCharacter', 'masteredTheme'],
+            'Grade Levels': ['mastered4thGrade', 'mastered5thGrade', 'mastered6thGrade'],
+            'Streaks': ['streak5', 'streak10', 'streak20'],
+            'Accuracy': ['perfect10', 'accuracy90'],
+            'Vocabulary': ['words25', 'words50'],
+            'Topics': ['topicMaster1', 'allTopicsMastered']
+        };
+        
+        let html = `
+            <div class="modal-content" style="max-width: 900px;">
+                <span class="close" onclick="document.getElementById('achievementsGallery').remove()">×</span>
+                <h2>🏆 Achievements Gallery</h2>
+                
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                     color: white; padding: 20px; border-radius: 15px; margin-bottom: 30px;">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: center;">
+                        <div>
+                            <div style="font-size: 2.5em; font-weight: bold;">${stats.earned}/${stats.total}</div>
+                            <div>Achievements Earned</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 2.5em; font-weight: bold;">${stats.points}</div>
+                            <div>Achievement Points</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 2.5em; font-weight: bold;">${stats.percentage}%</div>
+                            <div>Completion</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="max-height: 60vh; overflow-y: auto;">
+        `;
+        
+        // Display achievements by category
+        for (const [category, achIds] of Object.entries(categories)) {
+            const categoryAchs = achievements.filter(a => achIds.includes(a.id));
+            
+            html += `
+                <div style="margin-bottom: 30px;">
+                    <h3 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">
+                        ${category}
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+            `;
+            
+            categoryAchs.forEach(ach => {
+                html += `
+                    <div style="background: ${ach.earned ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)' : '#f0f0f0'}; 
+                         padding: 15px; border-radius: 10px; text-align: center;
+                         ${!ach.earned ? 'opacity: 0.5;' : ''}
+                         box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <div style="font-size: 3em; margin-bottom: 10px;">${ach.icon}</div>
+                        <div style="font-weight: bold; margin-bottom: 5px; color: ${ach.earned ? 'white' : '#333'};">
+                            ${ach.name}
+                        </div>
+                        <div style="font-size: 0.85em; margin-bottom: 10px; color: ${ach.earned ? 'white' : '#666'};">
+                            ${ach.description}
+                        </div>
+                        <div style="font-weight: bold; color: ${ach.earned ? 'white' : '#667eea'};">
+                            ${ach.earned ? '✓ EARNED' : ach.points + ' pts'}
+                        </div>
+                    </div>
+                `;
             });
+            
+            html += `
+                    </div>
+                </div>
+            `;
         }
         
-        return achievementList;
-    }
-    
-    // Get progress toward an achievement
-    function getAchievementProgress(achievement, userData) {
-        // Calculate progress based on achievement type
-        switch(achievement.id) {
-            case 'streak5': return `${userData.currentStreak}/5`;
-            case 'streak10': return `${userData.currentStreak}/10`;
-            case 'streak20': return `${userData.currentStreak}/20`;
-            case 'passages5': return `${userData.passagesRead}/5`;
-            case 'passages10': return `${userData.passagesRead}/10`;
-            case 'passages25': return `${userData.passagesRead}/25`;
-            case 'passages50': return `${userData.passagesRead}/50`;
-            case 'words10': return `${userData.wordsLearned.length}/10`;
-            case 'words25': return `${userData.wordsLearned.length}/25`;
-            case 'words50': return `${userData.wordsLearned.length}/50`;
-            case 'questions100': return `${userData.totalQuestions}/100`;
-            case 'questions500': return `${userData.totalQuestions}/500`;
-            case 'questions1000': return `${userData.totalQuestions}/1000`;
-            case 'dailyGoal': return `${userData.completedToday}/${userData.dailyGoal || 10}`;
-            default: return '';
-        }
-    }
-    
-    // Calculate total possible points
-    function getTotalPossiblePoints() {
-        let total = 0;
-        for (const achievement of Object.values(achievements)) {
-            total += achievement.points;
-        }
-        return total;
+        html += `
+                </div>
+                
+                <button class="btn btn-primary" onclick="document.getElementById('achievementsGallery').remove()"
+                        style="width: 100%; margin-top: 20px;">
+                    Close
+                </button>
+            </div>
+        `;
+        
+        modal.innerHTML = html;
+        document.body.appendChild(modal);
     }
     
     // Public API
     return {
         checkAchievements: checkAchievements,
-        showAchievement: showAchievement,
         getAllAchievements: getAllAchievements,
-        getTotalPossiblePoints: getTotalPossiblePoints
+        getAchievementStats: getAchievementStats,
+        showAchievementsGallery: showAchievementsGallery
     };
 })();
