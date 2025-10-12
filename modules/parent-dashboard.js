@@ -1,5 +1,4 @@
 // parent-dashboard.js - Parent Dashboard and Controls Module
-// Fixed to always read current userData from window object
 
 window.ParentDashboard = (function() {
     'use strict';
@@ -76,14 +75,11 @@ window.ParentDashboard = (function() {
         }
     }
     
-    // Show main dashboard - FIXED to always read from window.userData
+    // Show main dashboard
     function showDashboard() {
         const modalContent = document.querySelector('.modal-content');
         
-        // Always read from window to get current values
-        console.log("Dashboard opening with userData:", window.userData);
-        
-        // Calculate statistics
+        // Calculate statistics - read directly from window.userData
         const accuracy = window.userData.totalQuestions > 0 ? 
             Math.round((window.userData.correctAnswers / window.userData.totalQuestions) * 100) : 0;
         
@@ -283,7 +279,7 @@ window.ParentDashboard = (function() {
                 <!-- Security Settings -->
                 <div class="parent-section">
                     <h3>🔐 Security Settings</h3>
-                    <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button class="btn btn-primary" onclick="ParentDashboard.showChangePIN()" 
                                 style="background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
                             Change PIN
@@ -303,4 +299,196 @@ window.ParentDashboard = (function() {
                 <div class="parent-section" style="background: #e8f4f8; border: 2px solid #667eea;">
                     <h3>💡 Parent Tips & Insights</h3>
                     <ul style="line-height: 1.8; padding-left: 20px;">
-                        <li><strong>Jordan's Current Challenge:</strong> Reading comprehension at 4th grade level (needs
+                        <li><strong>Jordan's Current Challenge:</strong> Reading comprehension at 4th grade level (needs 6th grade)</li>
+                        <li><strong>Focus Areas:</strong> 
+                            <ul>
+                                <li>Finding main ideas in passages</li>
+                                <li>Understanding cause and effect relationships</li>
+                                <li>Using context clues for vocabulary</li>
+                                <li>Making inferences from text</li>
+                            </ul>
+                        </li>
+                        <li><strong>Recommended Practice:</strong> 15-20 minutes daily, focusing on comprehension first</li>
+                        <li><strong>Soccer Theme:</strong> We use soccer examples throughout to maintain engagement!</li>
+                        <li><strong>Progress Tracking:</strong> Check weekly to monitor improvement trends</li>
+                        <li><strong>Next IXL Assessment:</strong> Recommended in 2-3 months to measure growth</li>
+                    </ul>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Show change PIN screen
+    function showChangePIN() {
+        const modalContent = document.querySelector('.modal-content');
+        
+        modalContent.innerHTML = `
+            <span class="close" onclick="ParentDashboard.showDashboard()">← Back</span>
+            <h2>🔐 Change Security PIN</h2>
+            <div style="text-align: center; padding: 20px;">
+                <div style="margin-bottom: 20px;">
+                    <p>Enter new 4-digit PIN:</p>
+                    <input type="password" id="newPIN" maxlength="4" pattern="[0-9]*" inputmode="numeric"
+                           style="font-size: 24px; padding: 10px; width: 150px; text-align: center; 
+                                  border: 2px solid #667eea; border-radius: 10px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <p>Confirm new PIN:</p>
+                    <input type="password" id="confirmPIN" maxlength="4" pattern="[0-9]*" inputmode="numeric"
+                           style="font-size: 24px; padding: 10px; width: 150px; text-align: center; 
+                                  border: 2px solid #667eea; border-radius: 10px;">
+                </div>
+                <button class="btn btn-primary" onclick="ParentDashboard.changePIN()" 
+                        style="background: #667eea; color: white; padding: 10px 30px; border: none; border-radius: 5px; cursor: pointer;">
+                    Save New PIN
+                </button>
+                <div id="pinChangeError" style="color: red; margin-top: 10px;"></div>
+            </div>
+        `;
+    }
+    
+    // Change PIN
+    function changePIN() {
+        const newPIN = document.getElementById('newPIN').value;
+        const confirmPIN = document.getElementById('confirmPIN').value;
+        const errorDiv = document.getElementById('pinChangeError');
+        
+        if (newPIN.length !== 4 || !/^\d{4}$/.test(newPIN)) {
+            errorDiv.textContent = 'PIN must be exactly 4 digits';
+            return;
+        }
+        
+        if (newPIN !== confirmPIN) {
+            errorDiv.textContent = 'PINs do not match';
+            return;
+        }
+        
+        if (newPIN === '1234') {
+            errorDiv.textContent = 'Please choose a PIN other than 1234';
+            return;
+        }
+        
+        window.parentSettings.pinHash = window.hashPIN(newPIN);
+        window.parentSettings.initialized = true;
+        window.parentSettings.lastPinChange = new Date().toISOString();
+        window.saveParentSettings();
+        
+        alert('✅ PIN changed successfully!');
+        showDashboard();
+    }
+    
+    // Update daily goal
+    function updateDailyGoal(value) {
+        const goal = parseInt(value);
+        if (goal >= 5 && goal <= 50) {
+            window.parentSettings.dailyGoalOverride = goal;
+            window.saveParentSettings();
+            window.updateDailyProgress();
+        }
+    }
+    
+    // Update text size
+    function updateTextSize(value) {
+        window.parentSettings.textSizeOverride = value;
+        window.userData.preferences.textSize = value;
+        window.saveParentSettings();
+        window.saveUserData();
+    }
+    
+    // Update difficulty
+    function updateDifficulty(value) {
+        window.parentSettings.difficultyLevel = value;
+        
+        // Adjust reading level based on difficulty
+        if (value === 'easy') {
+            window.userData.readingLevel = 440; // 4th grade
+        } else if (value === 'medium') {
+            window.userData.readingLevel = 520; // 5th grade
+        } else if (value === 'hard') {
+            window.userData.readingLevel = 620; // 6th grade
+        }
+        // 'adaptive' keeps current level
+        
+        window.saveParentSettings();
+        window.saveUserData();
+        window.updateStats();
+    }
+    
+    // Toggle topic lock
+    function toggleTopicLock(topic) {
+        if (!window.parentSettings.lockedTopics) {
+            window.parentSettings.lockedTopics = [];
+        }
+        
+        const index = window.parentSettings.lockedTopics.indexOf(topic);
+        if (index === -1) {
+            window.parentSettings.lockedTopics.push(topic);
+        } else {
+            window.parentSettings.lockedTopics.splice(index, 1);
+        }
+        
+        window.saveParentSettings();
+        showDashboard(); // Refresh display
+    }
+    
+    // Export user data
+    function exportData() {
+        const dataStr = JSON.stringify(window.userData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `jordan-english-progress-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+    
+    // Reset all progress
+    function resetProgress() {
+        if (confirm('⚠️ WARNING: This will reset ALL of Jordan\'s progress including achievements, words learned, and statistics. This cannot be undone. Are you sure?')) {
+            if (confirm('Are you REALLY sure? All data will be permanently deleted.')) {
+                // Reset user data to defaults
+                window.userData = {
+                    readingLevel: 460,
+                    wordsLearned: [],
+                    passagesRead: 0,
+                    totalQuestions: 0,
+                    correctAnswers: 0,
+                    currentStreak: 0,
+                    longestStreak: 0,
+                    dailyGoal: 10,
+                    completedToday: 0,
+                    lastActivity: new Date().toISOString(),
+                    topicProgress: {},
+                    vocabularyMastery: {},
+                    achievements: [],
+                    preferences: window.userData.preferences,
+                    sessionsCompleted: {},
+                    masteredTopics: []
+                };
+                
+                window.saveUserData();
+                window.updateStats();
+                window.updateDailyProgress();
+                
+                alert('✅ All progress has been reset.');
+                showDashboard();
+            }
+        }
+    }
+    
+    // Public API
+    return {
+        show: show,
+        verifyPIN: verifyPIN,
+        showDashboard: showDashboard,
+        showChangePIN: showChangePIN,
+        changePIN: changePIN,
+        updateDailyGoal: updateDailyGoal,
+        updateTextSize: updateTextSize,
+        updateDifficulty: updateDifficulty,
+        toggleTopicLock: toggleTopicLock,
+        exportData: exportData,
+        resetProgress: resetProgress
+    };
+})();
