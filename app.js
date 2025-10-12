@@ -179,6 +179,7 @@ async function loadParentSettings() {
         const doc = await db.collection('english-settings').doc('parent').get();
         if (doc.exists) {
             parentSettings = doc.data();
+            window.parentSettings = parentSettings;
             console.log('Parent settings loaded from Firebase');
             // Save to localStorage as backup
             localStorage.setItem('jordanEnglishParentSettings', JSON.stringify(parentSettings));
@@ -187,6 +188,7 @@ async function loadParentSettings() {
             const localSettings = localStorage.getItem('jordanEnglishParentSettings');
             if (localSettings) {
                 parentSettings = JSON.parse(localSettings);
+                window.parentSettings = parentSettings;
                 console.log('Parent settings loaded from localStorage');
                 // Try to save to Firebase
                 await saveParentSettings();
@@ -199,6 +201,7 @@ async function loadParentSettings() {
         if (localSettings) {
             try {
                 parentSettings = JSON.parse(localSettings);
+                window.parentSettings = parentSettings;
             } catch (e) {
                 console.error("Error parsing parent settings:", e);
             }
