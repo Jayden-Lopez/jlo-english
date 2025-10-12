@@ -1,0 +1,7 @@
+window.WritingModule = (function() {
+    return {
+        startPractice: function() {
+            alert("Writing module coming soon!");
+        }
+    };
+})();
