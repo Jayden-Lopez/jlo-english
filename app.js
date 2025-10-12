@@ -669,10 +669,27 @@ window.addEventListener('load', testFirebaseConnection);
 // ========== GLOBAL EXPORTS ==========
 // Make functions available globally for modules and onclick handlers
 
-window.userData = userData;
-window.parentSettings = parentSettings;
-window.currentTopic = currentTopic;
-window.currentStreak = currentStreak;
+// Use getters to ensure we always get current values
+Object.defineProperty(window, 'userData', {
+    get: function() { return userData; },
+    set: function(val) { userData = val; }
+});
+
+Object.defineProperty(window, 'parentSettings', {
+    get: function() { return parentSettings; },
+    set: function(val) { parentSettings = val; }
+});
+
+Object.defineProperty(window, 'currentStreak', {
+    get: function() { return currentStreak; },
+    set: function(val) { currentStreak = val; }
+});
+
+Object.defineProperty(window, 'currentTopic', {
+    get: function() { return currentTopic; },
+    set: function(val) { currentTopic = val; }
+});
+
 window.topics = topics;
 window.saveUserData = saveUserData;
 window.saveParentSettings = saveParentSettings;
