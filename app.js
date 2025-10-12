@@ -2,6 +2,7 @@
 // Version 1.0.0
 
 const APP_VERSION = '1.0.0';
+const CACHE_BUSTER = Date.now(); 
 
 // Firebase Configuration - Using your existing math practice project
 const firebaseConfig = {
