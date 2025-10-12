@@ -15,11 +15,6 @@ window.PassagesModule = (function() {
     function selectAdaptivePassage(gradeLevel, weakAreas) {
         let allPassages = passages[gradeLevel] || passages.grade4;
         
-        // Add expanded passages if available
-        if (window.PassagesExpanded && window.PassagesExpanded[gradeLevel]) {
-            allPassages = [...allPassages, ...window.PassagesExpanded[gradeLevel]];
-        }
-        
         // If there are weak areas, try to find passages that target those skills
         if (weakAreas && weakAreas.length > 0) {
             const targetSkills = weakAreas.slice(0, 2).map(area => area.skill);
@@ -166,6 +161,132 @@ window.PassagesModule = (function() {
                         explanation: "The main theme is about doing the right thing by helping the puppy, even though Jake had to give it up."
                     }
                 ]
+            },
+            {
+                title: "The Community Garden",
+                text: `Mrs. Chen's class started a community garden in an empty lot near their school. Each student chose a vegetable to plant. Marcus picked tomatoes, while Sarah chose carrots. They learned that plants need sunlight, water, and good soil to grow. Every day after school, students took turns watering the garden. Some pulled weeds, and others checked for insects. After two months, the garden was full of colorful vegetables. The class harvested the food and donated it to a local food bank. Everyone felt proud knowing they helped feed families in their neighborhood.`,
+                questions: [
+                    {
+                        question: "What is the main purpose of the class garden project?",
+                        skill: "mainIdea",
+                        options: [
+                            "To learn about different vegetables",
+                            "To create something beautiful",
+                            "To grow food and help the community",
+                            "To get students outside more"
+                        ],
+                        correct: 2,
+                        explanation: "The passage emphasizes both learning and helping the community by donating to the food bank."
+                    },
+                    {
+                        question: "What happened as a result of students caring for the garden daily?",
+                        skill: "causeEffect",
+                        options: [
+                            "The garden became full of weeds",
+                            "The vegetables grew successfully",
+                            "The students got tired of gardening",
+                            "The school closed the lot"
+                        ],
+                        correct: 1,
+                        explanation: "Because students watered, weeded, and cared for it daily, the garden produced vegetables."
+                    },
+                    {
+                        question: "In the passage, what does 'harvested' mean?",
+                        skill: "vocabulary",
+                        options: [
+                            "Planted the seeds",
+                            "Watered the plants",
+                            "Gathered the grown vegetables",
+                            "Sold at a market"
+                        ],
+                        correct: 2,
+                        explanation: "Context shows harvesting happened after the vegetables grew, meaning gathering them."
+                    }
+                ]
+            },
+            {
+                title: "The Thunderstorm Adventure",
+                text: `Jake and his dad were hiking when dark clouds suddenly filled the sky. Thunder rumbled in the distance. "We need to get to the car quickly," Dad said. They started walking faster down the trail. Rain began to fall, lightly at first, then harder. Lightning flashed across the sky. Jake felt scared, but Dad stayed calm and led the way. They found a small shelter made of rock and waited inside until the storm passed. Thirty minutes later, the sun came out. A beautiful rainbow appeared in the sky. "See, Jake," Dad said with a smile, "after every storm comes something beautiful." Jake learned that staying calm and being prepared helps you handle difficult situations.`,
+                questions: [
+                    {
+                        question: "What happened first in the story?",
+                        skill: "sequence",
+                        options: [
+                            "It started raining",
+                            "Dark clouds appeared",
+                            "They found shelter",
+                            "A rainbow appeared"
+                        ],
+                        correct: 1,
+                        explanation: "The passage clearly states dark clouds appeared first, before anything else."
+                    },
+                    {
+                        question: "How did Jake's dad help him during the storm?",
+                        skill: "characterAnalysis",
+                        options: [
+                            "He complained about the weather",
+                            "He stayed calm and found shelter",
+                            "He got scared too",
+                            "He blamed Jake for the storm"
+                        ],
+                        correct: 1,
+                        explanation: "The passage shows Dad remained calm and took action to keep them safe."
+                    },
+                    {
+                        question: "What lesson does the story teach?",
+                        skill: "theme",
+                        options: [
+                            "Never go hiking",
+                            "Storms are dangerous and scary",
+                            "Staying calm helps you handle challenges",
+                            "Always bring an umbrella"
+                        ],
+                        correct: 2,
+                        explanation: "The story's message is about staying calm during difficult times, as shown by Dad's actions."
+                    }
+                ]
+            },
+            {
+                title: "The Library Mystery",
+                text: `Every Monday, books mysteriously appeared on students' desks at Lincoln Elementary. No one knew who was leaving them. The books were always perfect matches for each student. Emma, who loved animals, found a book about dolphins. Kevin, who enjoyed building things, discovered a book about famous architects. The librarian, Ms. Rodriguez, always smiled when students asked about the mystery books. One day, Maya arrived early and saw Ms. Rodriguez placing books on desks. "You've been the mystery book fairy!" Maya exclaimed. Ms. Rodriguez winked. "I love matching students with books they'll enjoy. Reading should be an adventure." Maya promised to keep the secret and help spread the love of reading.`,
+                questions: [
+                    {
+                        question: "Why did Ms. Rodriguez leave books for students?",
+                        skill: "inference",
+                        options: [
+                            "She had too many books",
+                            "She wanted to encourage reading by matching books to interests",
+                            "The school required it",
+                            "She was cleaning out the library"
+                        ],
+                        correct: 1,
+                        explanation: "Her comment about matching students with books they'll enjoy shows her motivation."
+                    },
+                    {
+                        question: "What can you tell about Ms. Rodriguez's personality?",
+                        skill: "characterAnalysis",
+                        options: [
+                            "She is thoughtful and cares about students",
+                            "She is mysterious and secretive",
+                            "She is strict and serious",
+                            "She is forgetful and disorganized"
+                        ],
+                        correct: 0,
+                        explanation: "She carefully selected books for each student, showing she pays attention and cares."
+                    },
+                    {
+                        question: "What is the main idea of this passage?",
+                        skill: "mainIdea",
+                        options: [
+                            "Libraries have many books",
+                            "A caring librarian finds creative ways to inspire reading",
+                            "Students should arrive at school early",
+                            "Mysteries are exciting"
+                        ],
+                        correct: 1,
+                        explanation: "The story focuses on Ms. Rodriguez's thoughtful way of encouraging students to read."
+                    }
+                ]
             }
         ],
         grade5: [
@@ -210,6 +331,132 @@ window.PassagesModule = (function() {
                         explanation: "The principal was confused because she couldn't figure out how the trophy disappeared."
                     }
                 ]
+            },
+            {
+                title: "The Robotics Competition",
+                text: `The Johnson Middle School robotics team had worked for three months on their robot, "Lightning." The regional competition was tomorrow, and everything seemed ready. During final testing, disaster struck. Lightning's main motor burned out. "We can't compete without it," said team captain Alex. The hardware store had closed for the day, and online ordering would take too long. Then Maya remembered her older brother's robotics kit in their garage. She called home, and within an hour, her brother arrived with a compatible motor. The team worked until midnight installing and testing it. The next day, Lightning not only competed but won second place. The team learned that resourcefulness and teamwork matter more than having perfect equipment.`,
+                questions: [
+                    {
+                        question: "What is the central conflict in this story?",
+                        skill: "mainIdea",
+                        options: [
+                            "The team doesn't work well together",
+                            "A critical robot part breaks right before competition",
+                            "The competition is too difficult",
+                            "Alex doesn't want to be team captain"
+                        ],
+                        correct: 1,
+                        explanation: "The main problem that drives the story is the motor burning out before the competition."
+                    },
+                    {
+                        question: "How did the team solve their problem?",
+                        skill: "causeEffect",
+                        options: [
+                            "They bought a new motor online",
+                            "They borrowed a motor from another team",
+                            "Maya remembered her brother had a compatible motor",
+                            "They competed without the motor"
+                        ],
+                        correct: 2,
+                        explanation: "Maya's quick thinking about her brother's robotics kit provided the solution."
+                    },
+                    {
+                        question: "Based on the story, what does 'resourcefulness' mean?",
+                        skill: "vocabulary",
+                        options: [
+                            "Having a lot of money to buy things",
+                            "Being able to find creative solutions to problems",
+                            "Working very hard on something",
+                            "Following instructions carefully"
+                        ],
+                        correct: 1,
+                        explanation: "The team showed resourcefulness by finding a creative solution (the brother's motor) instead of giving up."
+                    }
+                ]
+            },
+            {
+                title: "The Coral Reef Crisis",
+                text: `Dr. Martinez, a marine biologist, had been studying the same coral reef for fifteen years. Recently, she noticed something alarming. The vibrant colors of the coral were fading to white, a process called coral bleaching. She explained to her research team that warming ocean temperatures were stressing the coral, causing them to expel the algae that gave them color and food. "If this continues," she said, "the entire reef ecosystem could collapse." The reef was home to thousands of fish species and other marine life. Dr. Martinez and her team began documenting the changes and sharing their findings with scientists worldwide. They also worked with local communities to reduce pollution and protect the remaining healthy coral. While they couldn't control ocean temperatures alone, they knew every small action mattered.`,
+                questions: [
+                    {
+                        question: "What is causing the coral bleaching?",
+                        skill: "causeEffect",
+                        options: [
+                            "Too many tourists visiting the reef",
+                            "Pollution from local communities",
+                            "Warming ocean temperatures stressing the coral",
+                            "Overfishing in the area"
+                        ],
+                        correct: 2,
+                        explanation: "The passage explicitly states that warming ocean temperatures cause coral to expel their algae."
+                    },
+                    {
+                        question: "Why is the coral reef crisis important?",
+                        skill: "inference",
+                        options: [
+                            "Thousands of species depend on the reef for survival",
+                            "Coral is valuable and can be sold",
+                            "It makes the ocean look pretty",
+                            "Dr. Martinez needs it for her job"
+                        ],
+                        correct: 0,
+                        explanation: "The passage mentions the reef is home to thousands of species, making its health critical."
+                    },
+                    {
+                        question: "What theme does this passage convey?",
+                        skill: "theme",
+                        options: [
+                            "Science is difficult and complicated",
+                            "Individual actions can contribute to solving big problems",
+                            "Ocean life is dangerous",
+                            "Only scientists can help the environment"
+                        ],
+                        correct: 1,
+                        explanation: "The ending emphasizes that every small action matters, showing individual contribution is important."
+                    }
+                ]
+            },
+            {
+                title: "The Time Capsule Discovery",
+                text: `During renovations at Washington Elementary, construction workers discovered a metal box buried beneath the old playground. The principal called the oldest retired teacher, Mr. Henderson, who had taught at the school for forty years. When they opened the time capsule, they found letters, photographs, and drawings from students in 1975. One letter caught everyone's attention. It was written by a girl named Rosa Martinez, who described her dream of becoming a doctor to help people in her community. Mr. Henderson gasped. "Rosa Martinez is now Dr. Martinez, the director of County General Hospital," he said. "She achieved her dream!" The school decided to create a new time capsule, and every student wrote about their dreams for the future. The discovery reminded everyone that dreams written down and worked toward can come true.`,
+                questions: [
+                    {
+                        question: "What can we infer about Rosa Martinez from the story?",
+                        skill: "inference",
+                        options: [
+                            "She forgot about her childhood dream",
+                            "She stayed determined and achieved her goal",
+                            "She had an easy path to success",
+                            "She became a teacher instead"
+                        ],
+                        correct: 1,
+                        explanation: "The fact that she achieved the exact dream she wrote about shows her determination and persistence."
+                    },
+                    {
+                        question: "What is the main message of this story?",
+                        skill: "theme",
+                        options: [
+                            "Old schools should be renovated",
+                            "Time capsules are interesting to find",
+                            "Dreams and goals are worth pursuing",
+                            "Doctors are important in communities"
+                        ],
+                        correct: 2,
+                        explanation: "The story emphasizes how Rosa's written dream came true, inspiring current students to dream big."
+                    },
+                    {
+                        question: "What happened as a result of finding the time capsule?",
+                        skill: "causeEffect",
+                        options: [
+                            "The school was renamed",
+                            "Students created a new time capsule and wrote their dreams",
+                            "Mr. Henderson retired",
+                            "Dr. Martinez returned to teach"
+                        ],
+                        correct: 1,
+                        explanation: "The discovery inspired the school to create a new time capsule with student dreams."
+                    }
+                ]
             }
         ],
         grade6: [
@@ -252,6 +499,132 @@ window.PassagesModule = (function() {
                         ],
                         correct: 0,
                         explanation: "The saying means that difficult situations, like Elena's math struggles, can teach valuable lessons."
+                    }
+                ]
+            },
+            {
+                title: "The Ethics of Artificial Intelligence",
+                text: `As artificial intelligence becomes more advanced, society faces complex ethical questions. When a self-driving car encounters an unavoidable accident, how should it be programmed to respond? Should it prioritize the safety of passengers or pedestrians? Tech companies developing AI argue that these decisions should be made by programmers based on logical algorithms. However, philosophers and ethicists point out that these are moral questions that reflect our values as a society. Some countries are developing regulatory frameworks to govern AI decision-making, while others believe innovation should not be restricted. Dr. Sarah Chen, an AI researcher, explains, "We're not just creating technology; we're embedding our values into machines that will affect millions of lives. Every line of code is a moral choice." As AI continues to evolve, these discussions become increasingly urgent. The decisions made today will shape the relationship between humans and intelligent machines for generations to come.`,
+                questions: [
+                    {
+                        question: "What is the central ethical dilemma discussed in the passage?",
+                        skill: "mainIdea",
+                        options: [
+                            "Whether AI should exist at all",
+                            "How AI should make moral decisions that affect human lives",
+                            "Who should own AI technology",
+                            "Whether self-driving cars are safe"
+                        ],
+                        correct: 1,
+                        explanation: "The passage focuses on the ethical questions of how AI should be programmed to make moral decisions."
+                    },
+                    {
+                        question: "What does Dr. Chen's quote suggest about AI development?",
+                        skill: "inference",
+                        options: [
+                            "AI development is purely technical with no moral implications",
+                            "Programmers are embedding human values and ethics into AI systems",
+                            "AI development should be stopped",
+                            "Only philosophers should create AI"
+                        ],
+                        correct: 1,
+                        explanation: "She states that every line of code is a moral choice, meaning values are being built into AI."
+                    },
+                    {
+                        question: "Why do different groups disagree about AI regulation?",
+                        skill: "causeEffect",
+                        options: [
+                            "They have different priorities: innovation freedom vs. ethical oversight",
+                            "They don't understand how AI works",
+                            "Some want to make money from AI",
+                            "They are from different countries"
+                        ],
+                        correct: 0,
+                        explanation: "The passage shows tension between those wanting innovation freedom and those wanting ethical frameworks."
+                    }
+                ]
+            },
+            {
+                title: "The Hidden Cost of Fast Fashion",
+                text: `Every year, Americans discard over 85 pounds of clothing per person. This waste is largely driven by "fast fashion"—cheap, trendy clothes designed to be worn briefly and then replaced. Behind the low prices lies a complex web of environmental and human costs. The fashion industry is the second-largest polluter globally, with textile production consuming vast amounts of water and releasing harmful chemicals. A single cotton t-shirt requires 2,700 liters of water to produce, enough for one person to drink for two and a half years. Additionally, many fast fashion garments are made in developing countries where workers face unsafe conditions and receive wages below the poverty line. Some consumers are choosing "slow fashion"—buying fewer, higher-quality items made sustainably and ethically. Teenage activist Zara Williams started a clothing swap program at her school, preventing hundreds of items from ending up in landfills. "We can look good and do good at the same time," she explains. "Every purchasing decision is a vote for the kind of world we want to live in."`,
+                questions: [
+                    {
+                        question: "What is the author's main purpose in this passage?",
+                        skill: "theme",
+                        options: [
+                            "To convince readers to stop buying clothes",
+                            "To inform readers about fashion industry problems and alternatives",
+                            "To criticize people who like fashion",
+                            "To promote Zara Williams's program"
+                        ],
+                        correct: 1,
+                        explanation: "The passage educates about fast fashion issues while offering alternatives like slow fashion and swaps."
+                    },
+                    {
+                        question: "How does the author support the claim that fast fashion is harmful?",
+                        skill: "inference",
+                        options: [
+                            "By sharing personal opinions",
+                            "By providing specific statistics and examples",
+                            "By quoting fashion designers",
+                            "By describing trendy clothes"
+                        ],
+                        correct: 1,
+                        explanation: "The passage uses specific data (85 pounds waste, 2,700 liters water) to support the argument."
+                    },
+                    {
+                        question: "What does Zara Williams mean by 'every purchasing decision is a vote'?",
+                        skill: "vocabulary",
+                        options: [
+                            "Shopping is like political voting",
+                            "Our buying choices support certain practices and industries",
+                            "We should vote before shopping",
+                            "Purchases require government approval"
+                        ],
+                        correct: 1,
+                        explanation: "She's using 'vote' metaphorically—our purchases support the companies and practices we buy from."
+                    }
+                ]
+            },
+            {
+                title: "The Memory Palace Technique",
+                text: `In ancient Greece, orators amazed audiences by delivering hours-long speeches from memory without notes. Their secret was the "memory palace" technique, also called the method of loci. This mnemonic strategy involves visualizing a familiar place—like your home—and mentally placing pieces of information in different locations throughout it. When you need to recall the information, you mentally "walk" through your palace, encountering each piece in order. Modern neuroscience has confirmed what ancient Greeks discovered: spatial memory is more powerful than rote memorization. Our brains evolved to remember locations for survival, making this technique highly effective. Eight-time World Memory Champion Dominic O'Brien used memory palaces to memorize the order of 54 shuffled decks of cards. While most of us won't attempt such feats, the technique has practical applications. Students use it to remember historical dates, scientific terms, or foreign language vocabulary. The key is creating vivid, unusual mental images and placing them in a logical sequence through your familiar space. What makes this method remarkable is that it transforms abstract information into concrete, spatial experiences, playing to our brain's natural strengths.`,
+                questions: [
+                    {
+                        question: "According to the passage, why does the memory palace technique work so well?",
+                        skill: "causeEffect",
+                        options: [
+                            "It requires less practice than other methods",
+                            "It uses spatial memory, which our brains naturally excel at",
+                            "It was invented by ancient Greeks",
+                            "It involves walking around"
+                        ],
+                        correct: 1,
+                        explanation: "The passage explains that our brains evolved strong spatial memory for survival, making this technique effective."
+                    },
+                    {
+                        question: "What can we infer about the relationship between ancient techniques and modern science?",
+                        skill: "inference",
+                        options: [
+                            "Ancient methods were less effective than modern ones",
+                            "Modern science has disproven ancient techniques",
+                            "Ancient observations about memory align with current neuroscience",
+                            "Greeks knew more about brains than modern scientists"
+                        ],
+                        correct: 2,
+                        explanation: "The passage states neuroscience 'confirmed' what Greeks discovered, showing alignment between old and new knowledge."
+                    },
+                    {
+                        question: "What is the main idea of this passage?",
+                        skill: "mainIdea",
+                        options: [
+                            "Ancient Greeks were amazing speakers",
+                            "The memory palace technique is an effective method based on spatial memory",
+                            "Students should memorize more information",
+                            "Dominic O'Brien is a memory champion"
+                        ],
+                        correct: 1,
+                        explanation: "The passage explains what the memory palace is, why it works, and how it can be used."
                     }
                 ]
             }
