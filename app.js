@@ -1,21 +1,21 @@
-// app.js - Jordan's English Practice App Core
+// app.js - Jordan's English Practice App Core with Firebase
 // Version 1.0.0
 
 const APP_VERSION = '1.0.0';
 
-// Firebase Configuration - Use your existing config from math app
-// const firebaseConfig = {
-//     apiKey: "YOUR_KEY",
-//     authDomain: "jordan-math-practice.firebaseapp.com",
-//     projectId: "jordan-math-practice",
-//     storageBucket: "jordan-math-practice.appspot.com",
-//     messagingSenderId: "YOUR_ID",
-//     appId: "YOUR_APP_ID"
-// };
+// Firebase Configuration - Using your existing math practice project
+const firebaseConfig = {
+    apiKey: "AIzaSyDYpd-RQ3G7fiAZvT8Crx3lU5gVjbvLjHU",
+    authDomain: "jordan-math-practice.firebaseapp.com",
+    projectId: "jordan-math-practice",
+    storageBucket: "jordan-math-practice.appspot.com",
+    messagingSenderId: "482301964012",
+    appId: "1:482301964012:web:7e2b3f89e0da431e2b8c9e"
+};
 
-// Comment out Firebase for now - app will use localStorage
-// firebase.initializeApp(firebaseConfig);
-// const db = firebase.firestore();
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 // Global Variables
 let currentTopic = '';
@@ -28,7 +28,7 @@ let usedPassages = [];
 let parentAccessAttempts = 0;
 let lockoutTime = null;
 
-// User Data Structure
+// User Data Structure with defaults
 let userData = {
     readingLevel: 460, // From IXL assessment
     wordsLearned: [],
@@ -43,16 +43,18 @@ let userData = {
     topicProgress: {},
     vocabularyMastery: {},
     achievements: [],
+    achievementPoints: 0,
     preferences: {
         textSize: 'medium',
         showDefinitions: true,
         audioSupport: false
     },
     sessionsCompleted: {},
-    masteredTopics: []
+    masteredTopics: [],
+    version: APP_VERSION
 };
 
-// Parent Settings
+// Parent Settings with defaults
 let parentSettings = {
     pinHash: null,
     initialized: false,
@@ -98,43 +100,108 @@ const topics = {
 };
 
 // ========== INITIALIZATION ==========
-document.addEventListener('DOMContentLoaded', function() {
-    loadUserData();
-    loadParentSettings();
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Jordan\'s English Practice App v' + APP_VERSION + ' loading...');
+    
+    // Load data
+    await loadUserData();
+    await loadParentSettings();
+    
+    // Initialize app
     checkDailyReset();
     initializeTopics();
     updateStats();
     updateDailyProgress();
+    
+    console.log('App loaded successfully!');
 });
 
-// ========== DATA MANAGEMENT ==========
-function loadUserData() {
-    // Using localStorage for now (Firebase can be added later)
-    const saved = localStorage.getItem('jordanEnglishData');
-    if (saved) {
-        try {
-            const data = JSON.parse(saved);
-            userData = { ...userData, ...data, version: APP_VERSION };
-            updateStats();
-        } catch (e) {
-            console.error("Error parsing saved data:", e);
+// ========== DATA MANAGEMENT WITH FIREBASE ==========
+
+// Load user data from Firebase with localStorage fallback
+async function loadUserData() {
+    try {
+        const doc = await db.collection('english-users').doc('jordan').get();
+        if (doc.exists) {
+            const data = doc.data();
+            // Merge with defaults to ensure all fields exist
+            userData = { 
+                ...userData,  // Default values
+                ...data,      // Override with saved data
+                version: APP_VERSION  // Update version
+            };
+            console.log('User data loaded from Firebase');
+        } else {
+            // First time user - create document
+            console.log('Creating new user document in Firebase');
+            await saveUserData();
         }
+    } catch (error) {
+        console.error("Error loading from Firebase:", error);
+        // Fallback to localStorage
+        const localData = localStorage.getItem('jordanEnglishData');
+        if (localData) {
+            try {
+                const parsedData = JSON.parse(localData);
+                userData = { ...userData, ...parsedData, version: APP_VERSION };
+                console.log('User data loaded from localStorage');
+            } catch (e) {
+                console.error("Error parsing localStorage data:", e);
+            }
+        }
+    }
+    updateStats();
+}
+
+// Save user data to Firebase and localStorage
+async function saveUserData() {
+    userData.lastActivity = new Date().toISOString();
+    userData.version = APP_VERSION;
+    
+    try {
+        // Save to Firebase
+        await db.collection('english-users').doc('jordan').set(userData);
+        console.log('Data saved to Firebase');
+        
+        // Also save to localStorage as backup
+        localStorage.setItem('jordanEnglishData', JSON.stringify(userData));
+    } catch (error) {
+        console.error("Firebase save error:", error);
+        // If Firebase fails, at least save locally
+        localStorage.setItem('jordanEnglishData', JSON.stringify(userData));
+        console.log('Data saved to localStorage only');
     }
 }
 
-function saveUserData() {
-    userData.lastActivity = new Date().toISOString();
-    localStorage.setItem('jordanEnglishData', JSON.stringify(userData));
-    console.log('User data saved');
-}
-
-function loadParentSettings() {
-    const saved = localStorage.getItem('jordanEnglishParentSettings');
-    if (saved) {
-        try {
-            parentSettings = JSON.parse(saved);
-        } catch (e) {
-            console.error("Error parsing parent settings:", e);
+// Load parent settings from Firebase
+async function loadParentSettings() {
+    try {
+        const doc = await db.collection('english-settings').doc('parent').get();
+        if (doc.exists) {
+            parentSettings = doc.data();
+            console.log('Parent settings loaded from Firebase');
+            // Save to localStorage as backup
+            localStorage.setItem('jordanEnglishParentSettings', JSON.stringify(parentSettings));
+        } else {
+            // Check localStorage
+            const localSettings = localStorage.getItem('jordanEnglishParentSettings');
+            if (localSettings) {
+                parentSettings = JSON.parse(localSettings);
+                console.log('Parent settings loaded from localStorage');
+                // Try to save to Firebase
+                await saveParentSettings();
+            }
+        }
+    } catch (error) {
+        console.error("Error loading parent settings:", error);
+        // Fallback to localStorage
+        const localSettings = localStorage.getItem('jordanEnglishParentSettings');
+        if (localSettings) {
+            try {
+                parentSettings = JSON.parse(localSettings);
+            } catch (e) {
+                console.error("Error parsing parent settings:", e);
+            }
         }
     }
     
@@ -142,16 +209,28 @@ function loadParentSettings() {
     if (!parentSettings.pinHash) {
         parentSettings.pinHash = hashPIN('1234');
         parentSettings.initialized = false;
-        saveParentSettings();
+        await saveParentSettings();
     }
 }
 
-function saveParentSettings() {
-    localStorage.setItem('jordanEnglishParentSettings', JSON.stringify(parentSettings));
-    console.log('Parent settings saved');
+// Save parent settings to Firebase and localStorage
+async function saveParentSettings() {
+    try {
+        // Save to Firebase
+        await db.collection('english-settings').doc('parent').set(parentSettings);
+        console.log('Parent settings saved to Firebase');
+        
+        // Also save to localStorage
+        localStorage.setItem('jordanEnglishParentSettings', JSON.stringify(parentSettings));
+    } catch (error) {
+        console.error("Error saving parent settings:", error);
+        // If Firebase fails, at least save locally
+        localStorage.setItem('jordanEnglishParentSettings', JSON.stringify(parentSettings));
+    }
 }
 
 // ========== UTILITY FUNCTIONS ==========
+
 function hashPIN(pin) {
     let hash = 0;
     for (let i = 0; i < pin.length; i++) {
@@ -166,8 +245,10 @@ function checkDailyReset() {
     const lastActivity = userData.lastActivity ? new Date(userData.lastActivity).toDateString() : '';
     
     if (today !== lastActivity) {
+        console.log('New day - resetting daily progress');
         userData.completedToday = 0;
         userData.lastActivity = new Date().toISOString();
+        // Don't await here to avoid blocking initialization
         saveUserData();
     }
 }
@@ -181,9 +262,13 @@ function getReadingLevelName(level) {
 }
 
 // ========== UI FUNCTIONS ==========
+
 function initializeTopics() {
     const topicSelection = document.getElementById('topicSelection');
-    if (!topicSelection) return;
+    if (!topicSelection) {
+        console.error('Topic selection container not found');
+        return;
+    }
     
     createTopicCards();
     updateDailyProgress();
@@ -191,7 +276,10 @@ function initializeTopics() {
 
 function createTopicCards() {
     const grid = document.getElementById('topicGrid');
-    if (!grid) return;
+    if (!grid) {
+        console.error('Topic grid not found');
+        return;
+    }
     
     grid.innerHTML = '';
     
@@ -210,7 +298,7 @@ function createTopicCards() {
             card.className += ' mastered';
         }
         
-        const progressPercent = (progress.completed / progress.total) * 100;
+        const progressPercent = Math.min((progress.completed / progress.total) * 100, 100);
         
         card.innerHTML = `
             <span class="soccer-theme">⚽</span>
@@ -237,6 +325,7 @@ function createTopicCards() {
 }
 
 // ========== TOPIC MANAGEMENT ==========
+
 function startTopic(topicKey) {
     currentTopic = topicKey;
     document.getElementById('topicSelection').style.display = 'none';
@@ -263,7 +352,8 @@ function startTopic(topicKey) {
     startTime = Date.now();
 }
 
-// ========== ANSWER CHECKING ==========
+// ========== ANSWER CHECKING & PROGRESS ==========
+
 function updateProgress(isCorrect) {
     userData.totalQuestions++;
     
@@ -288,6 +378,8 @@ function updateProgress(isCorrect) {
     }
     
     userData.completedToday++;
+    
+    // Save progress (don't await to keep UI responsive)
     saveUserData();
     updateStats();
     updateDailyProgress();
@@ -297,56 +389,61 @@ function updateProgress(isCorrect) {
 }
 
 // ========== ACHIEVEMENTS ==========
+
 function checkAchievements() {
     // Check for mastery
     for (const [key, topic] of Object.entries(topics)) {
         const progress = userData.topicProgress[key];
         if (progress && progress.completed >= 20 && !userData.masteredTopics.includes(key)) {
+            if (!userData.masteredTopics) userData.masteredTopics = [];
             userData.masteredTopics.push(key);
             showAchievement("Topic Mastered!", `You've mastered ${topic.name}! 🏆`);
+            saveUserData();
         }
     }
     
-    // Streak achievements
-    if (userData.currentStreak === 5 && !userData.achievements.includes('streak5')) {
-        userData.achievements.push('streak5');
-        showAchievement("5-Answer Streak!", "You got 5 correct in a row! ⚽");
+    // Use achievements module if available
+    if (window.AchievementsModule) {
+        window.AchievementsModule.checkAchievements(userData, currentTopic, topics);
+    } else {
+        // Basic achievement checks
+        if (userData.currentStreak === 5 && !userData.achievements.includes('streak5')) {
+            userData.achievements.push('streak5');
+            showAchievement("5-Answer Streak!", "You got 5 correct in a row! ⚽");
+        }
+        
+        if (userData.currentStreak === 10 && !userData.achievements.includes('streak10')) {
+            userData.achievements.push('streak10');
+            showAchievement("10-Answer Streak!", "Amazing! 10 correct answers in a row!");
+        }
+        
+        if (userData.wordsLearned.length === 10 && !userData.achievements.includes('words10')) {
+            userData.achievements.push('words10');
+            showAchievement("Vocabulary Builder!", "You've learned 10 new words!");
+        }
+        
+        if (userData.passagesRead === 10 && !userData.achievements.includes('passages10')) {
+            userData.achievements.push('passages10');
+            showAchievement("Bookworm!", "You've read 10 passages! 📚");
+        }
     }
-    
-    if (userData.currentStreak === 10 && !userData.achievements.includes('streak10')) {
-        userData.achievements.push('streak10');
-        showAchievement("10-Answer Streak!", "Amazing! 10 correct answers in a row!");
-    }
-    
-    // Vocabulary achievements
-    if (userData.wordsLearned.length === 10 && !userData.achievements.includes('words10')) {
-        userData.achievements.push('words10');
-        showAchievement("Vocabulary Builder!", "You've learned 10 new words!");
-    }
-    
-    // Reading achievements
-    if (userData.passagesRead === 10 && !userData.achievements.includes('passages10')) {
-        userData.achievements.push('passages10');
-        showAchievement("Bookworm!", "You've read 10 passages! 📚");
-    }
-    
-    // Accuracy achievement
-    const accuracy = userData.totalQuestions > 0 ? 
-        (userData.correctAnswers / userData.totalQuestions) * 100 : 0;
-    if (accuracy >= 90 && userData.totalQuestions >= 20 && !userData.achievements.includes('accuracy90')) {
-        userData.achievements.push('accuracy90');
-        showAchievement("Accuracy Expert!", "90%+ accuracy achieved!");
-    }
-    
-    saveUserData();
 }
 
 function showAchievement(title, message) {
     const popup = document.getElementById('achievementPopup');
     if (popup) {
-        document.getElementById('achievementMessage').textContent = message;
-        document.querySelector('.achievement-title').textContent = title;
+        const titleEl = popup.querySelector('.achievement-title');
+        const messageEl = document.getElementById('achievementMessage');
+        
+        if (titleEl) titleEl.textContent = title;
+        if (messageEl) messageEl.textContent = message;
+        
         popup.style.display = 'block';
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            popup.style.display = 'none';
+        }, 5000);
     } else {
         alert(`🏆 ${title}\n${message}`);
     }
@@ -360,6 +457,7 @@ function closeAchievement() {
 }
 
 // ========== STATISTICS ==========
+
 function updateStats() {
     const readingLevelEl = document.getElementById('readingLevel');
     if (readingLevelEl) {
@@ -394,6 +492,7 @@ function updateDailyProgress() {
     const goalAmount = parentSettings.dailyGoalOverride || userData.dailyGoal;
     const progress = Math.min((userData.completedToday / goalAmount) * 100, 100);
     const progressBar = document.getElementById('dailyProgress');
+    
     if (progressBar) {
         progressBar.style.width = progress + '%';
         progressBar.textContent = `Daily Goal: ${userData.completedToday}/${goalAmount} activities`;
@@ -401,12 +500,15 @@ function updateDailyProgress() {
     
     // Check if daily goal reached
     if (userData.completedToday >= goalAmount && !userData.achievements.includes(`daily${new Date().toDateString()}`)) {
+        if (!userData.achievements) userData.achievements = [];
         userData.achievements.push(`daily${new Date().toDateString()}`);
         showAchievement("Daily Goal Reached!", "Great job completing your daily practice! 🎉");
+        saveUserData();
     }
 }
 
 // ========== NAVIGATION ==========
+
 function backToTopics() {
     document.getElementById('topicSelection').style.display = 'block';
     document.getElementById('questionContainer').style.display = 'none';
@@ -427,6 +529,7 @@ function showHint() {
 }
 
 // ========== PARENT ACCESS ==========
+
 function showParentAccess() {
     if (!parentSettings.pinHash) {
         parentSettings.pinHash = hashPIN('1234');
@@ -440,30 +543,36 @@ function showParentAccess() {
         return;
     }
     
-    const modal = document.getElementById('parentModal');
-    const modalContent = document.querySelector('.modal-content');
-    
-    if (modal && modalContent) {
-        modalContent.innerHTML = `
-            <span class="close" onclick="closeParentModal()">&times;</span>
-            <h2>🔐 Parent Access</h2>
-            <div style="text-align: center; padding: 20px;">
-                ${!parentSettings.initialized ? 
-                    '<p style="color: #e53e3e; font-weight: bold;">First Time Setup: Default PIN is 1234. Please change it!</p>' : 
-                    '<p>Enter your 4-digit PIN to access parent controls</p>'}
-                <input type="password" id="parentPIN" maxlength="4" pattern="[0-9]*" inputmode="numeric"
-                       style="font-size: 24px; padding: 10px; width: 150px; text-align: center; border: 2px solid #667eea; border-radius: 10px;"
-                       onkeypress="if(event.key==='Enter') verifyParentPIN()">
-                <br><br>
-                <button class="btn btn-primary" onclick="verifyParentPIN()">Submit</button>
-                <div id="pinError" style="color: red; margin-top: 10px;"></div>
-            </div>
-        `;
-        
-        modal.style.display = 'flex';
-        document.getElementById('parentPIN').focus();
+    // Use ParentDashboard module if available
+    if (window.ParentDashboard) {
+        window.ParentDashboard.show(parentSettings, userData, topics);
     } else {
-        alert("Parent Dashboard - Default PIN: 1234\n(Full dashboard interface coming soon)");
+        // Fallback to basic PIN prompt
+        const modal = document.getElementById('parentModal');
+        const modalContent = document.querySelector('.modal-content');
+        
+        if (modal && modalContent) {
+            modalContent.innerHTML = `
+                <span class="close" onclick="closeParentModal()">&times;</span>
+                <h2>🔐 Parent Access</h2>
+                <div style="text-align: center; padding: 20px;">
+                    ${!parentSettings.initialized ? 
+                        '<p style="color: #e53e3e; font-weight: bold;">First Time Setup: Default PIN is 1234. Please change it!</p>' : 
+                        '<p>Enter your 4-digit PIN to access parent controls</p>'}
+                    <input type="password" id="parentPIN" maxlength="4" pattern="[0-9]*" inputmode="numeric"
+                           style="font-size: 24px; padding: 10px; width: 150px; text-align: center; border: 2px solid #667eea; border-radius: 10px;"
+                           onkeypress="if(event.key==='Enter') verifyParentPIN()">
+                    <br><br>
+                    <button class="btn btn-primary" onclick="verifyParentPIN()">Submit</button>
+                    <div id="pinError" style="color: red; margin-top: 10px;"></div>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+            document.getElementById('parentPIN').focus();
+        } else {
+            alert("Parent Dashboard - Default PIN: 1234");
+        }
     }
 }
 
@@ -493,11 +602,14 @@ function verifyParentPIN() {
 }
 
 function showParentDashboard() {
-    // Simple parent dashboard for now
-    const accuracy = userData.totalQuestions > 0 ? 
-        Math.round((userData.correctAnswers / userData.totalQuestions) * 100) : 0;
-    
-    alert(`
+    if (window.ParentDashboard) {
+        window.ParentDashboard.showDashboard();
+    } else {
+        // Basic dashboard
+        const accuracy = userData.totalQuestions > 0 ? 
+            Math.round((userData.correctAnswers / userData.totalQuestions) * 100) : 0;
+        
+        alert(`
 📊 Jordan's Progress Report
 ━━━━━━━━━━━━━━━━━━━━━
 Reading Level: ${getReadingLevelName(userData.readingLevel)}
@@ -510,13 +622,9 @@ Daily Progress: ${userData.completedToday}/${userData.dailyGoal}
 Target: 6th Grade Reading Level
 Current: 4th Grade (needs improvement)
 
-Focus Areas:
-• Reading comprehension strategies
-• Vocabulary building with context clues
-• Main idea identification
-
-Full dashboard interface coming soon!
-    `);
+Full dashboard available when all modules are loaded.
+        `);
+    }
     
     closeParentModal();
 }
@@ -528,8 +636,36 @@ function closeParentModal() {
     }
 }
 
+// ========== TEST FIREBASE CONNECTION ==========
+
+async function testFirebaseConnection() {
+    try {
+        // Try to write a test field
+        await db.collection('english-users').doc('test-connection').set({
+            testField: 'Connection successful',
+            timestamp: new Date().toISOString(),
+            version: APP_VERSION
+        });
+        
+        // Try to read it back
+        const doc = await db.collection('english-users').doc('test-connection').get();
+        if (doc.exists) {
+            console.log('✅ Firebase connection test successful!');
+            // Clean up test document
+            await db.collection('english-users').doc('test-connection').delete();
+        }
+    } catch (error) {
+        console.error('❌ Firebase connection test failed:', error);
+        console.log('App will use localStorage as fallback');
+    }
+}
+
+// Run connection test on load
+window.addEventListener('load', testFirebaseConnection);
+
 // ========== GLOBAL EXPORTS ==========
 // Make functions available globally for modules and onclick handlers
+
 window.userData = userData;
 window.parentSettings = parentSettings;
 window.currentTopic = currentTopic;
@@ -551,5 +687,4 @@ window.showAchievement = showAchievement;
 window.closeAchievement = closeAchievement;
 window.getReadingLevelName = getReadingLevelName;
 window.checkAchievements = checkAchievements;
-
-console.log('Jordan\'s English Practice App v' + APP_VERSION + ' loaded');
+window.showParentDashboard = showParentDashboard;
