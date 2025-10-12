@@ -23,7 +23,6 @@ body {
 .header {
     text-align: center;
     margin-bottom: 30px;
-    position: relative;
 }
 
 .header h1 {
@@ -33,9 +32,6 @@ body {
 }
 
 .parent-access-btn {
-    position: absolute;
-    right: 0;
-    top: 0;
     background: #6c757d;
     color: white;
     padding: 10px 20px;
@@ -43,10 +39,12 @@ body {
     cursor: pointer;
     border: none;
     font-size: 0.9em;
+    transition: all 0.3s;
 }
 
 .parent-access-btn:hover {
     background: #5a6268;
+    transform: scale(1.05);
 }
 
 .stats-bar {
