@@ -1,4 +1,4 @@
-// parent-dashboard.js - Parent Dashboard and Controls Module
+// parent-dashboard.js - Enhanced Parent Dashboard with Skill Tracking
 
 window.ParentDashboard = (function() {
     'use strict';
@@ -8,7 +8,6 @@ window.ParentDashboard = (function() {
     
     // Show parent access screen
     function show(parentSettings, userData, topics) {
-        // Check if locked out
         if (lockoutEndTime && new Date() < lockoutEndTime) {
             const remainingTime = Math.ceil((lockoutEndTime - new Date()) / 1000);
             alert(`Too many incorrect PIN attempts. Please wait ${remainingTime} seconds.`);
@@ -23,7 +22,6 @@ window.ParentDashboard = (function() {
             return;
         }
         
-        // Show PIN entry screen
         modalContent.innerHTML = `
             <span class="close" onclick="closeParentModal()">&times;</span>
             <h2>🔐 Parent Access</h2>
@@ -65,7 +63,7 @@ window.ParentDashboard = (function() {
         } else {
             pinAttempts++;
             if (pinAttempts >= 3) {
-                lockoutEndTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minute lockout
+                lockoutEndTime = new Date(Date.now() + 5 * 60 * 1000);
                 errorDiv.textContent = 'Too many attempts. Locked for 5 minutes.';
                 setTimeout(() => window.closeParentModal(), 2000);
             } else {
@@ -75,15 +73,13 @@ window.ParentDashboard = (function() {
         }
     }
     
-    // Show main dashboard
+    // Show main dashboard with skill breakdown
     function showDashboard() {
         const modalContent = document.querySelector('.modal-content');
         
-        // Calculate statistics - read directly from window.userData
         const accuracy = window.userData.totalQuestions > 0 ? 
             Math.round((window.userData.correctAnswers / window.userData.totalQuestions) * 100) : 0;
         
-        // Get achievement stats
         let totalAchievements = 0;
         let achievementPoints = 0;
         if (window.AchievementsModule) {
@@ -91,6 +87,11 @@ window.ParentDashboard = (function() {
             totalAchievements = allAchievements.filter(a => a.earned).length;
             achievementPoints = window.userData.achievementPoints || 0;
         }
+        
+        // Get current grade level
+        const currentGrade = window.MasteryTracker ? 
+            window.MasteryTracker.getCurrentGradeLevel('comprehension') : 'grade4';
+        const gradeInfo = window.MasteryTracker?.GRADE_LEVELS[currentGrade];
         
         modalContent.innerHTML = `
             <span class="close" onclick="closeParentModal()">&times;</span>
@@ -109,8 +110,8 @@ window.ParentDashboard = (function() {
                     <h3>📊 Quick Overview</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
                         <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 10px;">
-                            <div style="font-size: 2em; font-weight: bold;">${window.getReadingLevelName(window.userData.readingLevel)}</div>
-                            <div>Reading Level</div>
+                            <div style="font-size: 2em; font-weight: bold;">${gradeInfo?.name || window.getReadingLevelName(window.userData.readingLevel)}</div>
+                            <div>Current Level</div>
                         </div>
                         <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 10px;">
                             <div style="font-size: 2em; font-weight: bold;">${accuracy}%</div>
@@ -127,9 +128,137 @@ window.ParentDashboard = (function() {
                     </div>
                 </div>
                 
+                <!-- Grade Progression Path -->
+                ${window.MasteryTracker ? `
+                <div class="parent-section">
+                    <h3>📈 Grade Level Progression</h3>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin: 20px 0;">
+                        ${['grade4', 'grade5', 'grade6'].map(grade => {
+                            const isCompleted = window.MasteryTracker.isLevelMastered('comprehension', grade);
+                            const isCurrent = currentGrade === grade;
+                            const gradeNum = grade.replace('grade', '');
+                            
+                            return `
+                                <div style="text-align: center;">
+                                    <div style="width: 80px; height: 80px; border-radius: 50%; 
+                                         background: ${isCompleted ? '#10b981' : isCurrent ? '#667eea' : '#e2e8f0'};
+                                         color: white; display: flex; align-items: center; justify-content: center;
+                                         font-size: 1.5em; font-weight: bold; margin-bottom: 10px;
+                                         ${isCurrent ? 'box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);' : ''}">
+                                        ${isCompleted ? '✓' : gradeNum + 'th'}
+                                    </div>
+                                    <div style="font-weight: bold; color: ${isCurrent ? '#667eea' : '#666'};">
+                                        ${isCurrent ? '→ Current' : isCompleted ? 'Mastered' : 'Locked'}
+                                    </div>
+                                </div>
+                                ${grade !== 'grade6' ? '<div style="font-size: 2em; color: #cbd5e0;">→</div>' : ''}
+                            `;
+                        }).join('')}
+                    </div>
+                    <p style="text-align: center; color: #666; margin-top: 20px;">
+                        <strong>Goal:</strong> Master all skills at each grade level before advancing to the next
+                    </p>
+                </div>
+                ` : ''}
+                
+                <!-- Detailed Skill Breakdown -->
+                ${window.MasteryTracker && window.userData.skillProgress?.comprehension ? `
+                <div class="parent-section">
+                    <h3>📚 Reading Comprehension Skills (${gradeInfo?.name})</h3>
+                    <p style="margin-bottom: 15px; color: #666;">Each skill must reach 80% accuracy to be considered mastered</p>
+                    ${Object.entries(window.MasteryTracker.READING_SKILLS).map(([skillKey, skillInfo]) => {
+                        const progress = window.userData.skillProgress.comprehension[skillKey] || { correct: 0, attempts: 0, accuracy: 0 };
+                        const isMastered = window.MasteryTracker.isSkillMastered('comprehension', skillKey);
+                        const percent = skillInfo.required > 0 ? Math.round((progress.correct / skillInfo.required) * 100) : 0;
+                        
+                        return `
+                            <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px;
+                                 border: 2px solid ${isMastered ? '#10b981' : progress.accuracy >= 70 ? '#fbbf24' : '#ef4444'};">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <div>
+                                        <strong style="color: #2d3748;">${skillInfo.name}</strong>
+                                        ${isMastered ? ' <span style="color: #10b981;">✓ Mastered</span>' : ''}
+                                        <div style="font-size: 0.85em; color: #666; margin-top: 3px;">
+                                            Level: ${skillInfo.level}
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 1.2em; font-weight: bold; color: ${isMastered ? '#10b981' : '#667eea'};">
+                                            ${progress.correct}/${skillInfo.required}
+                                        </div>
+                                        <div style="font-size: 0.9em; color: #666;">
+                                            ${progress.accuracy}% accuracy
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="background: #e5e7eb; height: 10px; border-radius: 5px;">
+                                    <div style="background: ${isMastered ? '#10b981' : progress.accuracy >= 70 ? '#fbbf24' : '#ef4444'}; 
+                                         width: ${Math.min(percent, 100)}%; height: 100%; border-radius: 5px; transition: width 0.3s;"></div>
+                                </div>
+                                ${!isMastered && progress.attempts > 0 ? `
+                                    <div style="margin-top: 8px; font-size: 0.85em; color: #666;">
+                                        ${progress.correct < skillInfo.required ? 
+                                            `Need ${skillInfo.required - progress.correct} more correct answers` : 
+                                            progress.accuracy < 80 ? 
+                                            `Practice to improve accuracy from ${progress.accuracy}% to 80%` : ''}
+                                    </div>
+                                ` : !isMastered ? `
+                                    <div style="margin-top: 8px; font-size: 0.85em; color: #ef4444;">
+                                        ⚠️ Not yet practiced - needs attention
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                ` : ''}
+                
+                <!-- Focus Areas -->
+                ${window.MasteryTracker ? `
+                <div class="parent-section">
+                    <h3>🎯 Current Focus Areas</h3>
+                    ${(() => {
+                        const weakAreas = window.MasteryTracker.getWeakAreas('comprehension');
+                        if (weakAreas.length === 0) {
+                            return `
+                                <div style="background: #d1fae5; padding: 20px; border-radius: 10px; border: 2px solid #10b981;">
+                                    <div style="color: #065f46; font-size: 1.2em; font-weight: bold; margin-bottom: 10px;">
+                                        🎉 All Skills Mastered at Current Level!
+                                    </div>
+                                    <p style="color: #065f46; margin: 0;">
+                                        Jordan is ready to advance to the next grade level. Keep up the excellent work!
+                                    </p>
+                                </div>
+                            `;
+                        }
+                        
+                        return `
+                            <div style="background: #fff3cd; padding: 20px; border-radius: 10px; border: 2px solid #ffc107; margin-bottom: 15px;">
+                                <p style="color: #856404; margin-bottom: 15px;">
+                                    <strong>Recommended areas for Jordan to practice:</strong>
+                                </p>
+                                <ol style="color: #856404; line-height: 2; margin: 0; padding-left: 20px;">
+                                    ${weakAreas.slice(0, 3).map(area => `
+                                        <li>
+                                            <strong>${area.name}:</strong> ${area.reason}
+                                            <div style="font-size: 0.9em; margin-top: 5px;">
+                                                Progress: ${area.correct}/${area.required} correct answers needed
+                                            </div>
+                                        </li>
+                                    `).join('')}
+                                </ol>
+                            </div>
+                            <p style="color: #666; font-size: 0.9em; margin: 0;">
+                                💡 <strong>Tip:</strong> The app automatically focuses on these weak areas during practice sessions
+                            </p>
+                        `;
+                    })()}
+                </div>
+                ` : ''}
+                
                 <!-- IXL Alignment Report -->
                 <div class="parent-section">
-                    <h3>📈 IXL Skills Alignment</h3>
+                    <h3>📊 IXL Skills Alignment</h3>
                     <p style="margin-bottom: 15px;">Based on IXL assessment (October 2025)</p>
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr style="background: #f0f0f0;">
@@ -140,10 +269,12 @@ window.ParentDashboard = (function() {
                         </tr>
                         <tr>
                             <td style="padding: 10px; border-top: 1px solid #ddd;">Reading Strategies</td>
-                            <td style="padding: 10px; text-align: center; border-top: 1px solid #ddd;">440 (4th)</td>
+                            <td style="padding: 10px; text-align: center; border-top: 1px solid #ddd;">${gradeInfo?.ixlLevel || 440} (${gradeInfo?.name?.split(' ')[0] || '4th'})</td>
                             <td style="padding: 10px; text-align: center; border-top: 1px solid #ddd;">600+ (6th)</td>
                             <td style="padding: 10px; text-align: center; border-top: 1px solid #ddd;">
-                                <span style="color: #e53e3e;">Needs Work</span>
+                                <span style="color: ${currentGrade === 'grade6' ? '#10b981' : currentGrade === 'grade5' ? '#f59e0b' : '#e53e3e'};">
+                                    ${currentGrade === 'grade6' ? 'On Track ✓' : currentGrade === 'grade5' ? 'Improving' : 'Needs Work'}
+                                </span>
                             </td>
                         </tr>
                         <tr>
@@ -299,18 +430,12 @@ window.ParentDashboard = (function() {
                 <div class="parent-section" style="background: #e8f4f8; border: 2px solid #667eea;">
                     <h3>💡 Parent Tips & Insights</h3>
                     <ul style="line-height: 1.8; padding-left: 20px;">
-                        <li><strong>Jordan's Current Challenge:</strong> Reading comprehension at 4th grade level (needs 6th grade)</li>
-                        <li><strong>Focus Areas:</strong> 
-                            <ul>
-                                <li>Finding main ideas in passages</li>
-                                <li>Understanding cause and effect relationships</li>
-                                <li>Using context clues for vocabulary</li>
-                                <li>Making inferences from text</li>
-                            </ul>
-                        </li>
-                        <li><strong>Recommended Practice:</strong> 15-20 minutes daily, focusing on comprehension first</li>
+                        <li><strong>Jordan's Current Challenge:</strong> Reading comprehension at ${gradeInfo?.name || '4th Grade'} level (target: 6th grade)</li>
+                        <li><strong>Learning Path:</strong> Must master all 7 reading skills at each grade level before advancing</li>
+                        <li><strong>Focus Areas:</strong> The app automatically targets weak skills during practice</li>
+                        <li><strong>Recommended Practice:</strong> 15-20 minutes daily, focusing on identified weak areas</li>
                         <li><strong>Soccer Theme:</strong> We use soccer examples throughout to maintain engagement!</li>
-                        <li><strong>Progress Tracking:</strong> Check weekly to monitor improvement trends</li>
+                        <li><strong>Progress Tracking:</strong> Check weekly to monitor improvement trends and skill mastery</li>
                         <li><strong>Next IXL Assessment:</strong> Recommended in 2-3 months to measure growth</li>
                     </ul>
                 </div>
@@ -399,15 +524,13 @@ window.ParentDashboard = (function() {
     function updateDifficulty(value) {
         window.parentSettings.difficultyLevel = value;
         
-        // Adjust reading level based on difficulty
         if (value === 'easy') {
-            window.userData.readingLevel = 440; // 4th grade
+            window.userData.readingLevel = 440;
         } else if (value === 'medium') {
-            window.userData.readingLevel = 520; // 5th grade
+            window.userData.readingLevel = 520;
         } else if (value === 'hard') {
-            window.userData.readingLevel = 620; // 6th grade
+            window.userData.readingLevel = 620;
         }
-        // 'adaptive' keeps current level
         
         window.saveParentSettings();
         window.saveUserData();
@@ -428,7 +551,7 @@ window.ParentDashboard = (function() {
         }
         
         window.saveParentSettings();
-        showDashboard(); // Refresh display
+        showDashboard();
     }
     
     // Export user data
@@ -447,7 +570,6 @@ window.ParentDashboard = (function() {
     function resetProgress() {
         if (confirm('⚠️ WARNING: This will reset ALL of Jordan\'s progress including achievements, words learned, and statistics. This cannot be undone. Are you sure?')) {
             if (confirm('Are you REALLY sure? All data will be permanently deleted.')) {
-                // Reset user data to defaults
                 window.userData = {
                     readingLevel: 460,
                     wordsLearned: [],
@@ -464,7 +586,9 @@ window.ParentDashboard = (function() {
                     achievements: [],
                     preferences: window.userData.preferences,
                     sessionsCompleted: {},
-                    masteredTopics: []
+                    masteredTopics: [],
+                    skillProgress: {},
+                    gradeProgress: {}
                 };
                 
                 window.saveUserData();
