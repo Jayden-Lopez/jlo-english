@@ -1,4 +1,5 @@
 // parent-dashboard.js - Parent Dashboard and Controls Module
+// Fixed to always read current userData from window object
 
 window.ParentDashboard = (function() {
     'use strict';
@@ -28,7 +29,7 @@ window.ParentDashboard = (function() {
             <span class="close" onclick="closeParentModal()">&times;</span>
             <h2>🔐 Parent Access</h2>
             <div style="text-align: center; padding: 20px;">
-                ${!parentSettings.initialized ? 
+                ${!window.parentSettings.initialized ? 
                     '<p style="color: #e53e3e; font-weight: bold;">⚠️ First Time Setup: Default PIN is 1234. Please change it!</p>' : 
                     '<p>Enter your 4-digit PIN to access parent controls</p>'}
                 <input type="password" id="parentPIN" maxlength="4" pattern="[0-9]*" inputmode="numeric"
@@ -75,24 +76,24 @@ window.ParentDashboard = (function() {
         }
     }
     
-    // Show main dashboard
+    // Show main dashboard - FIXED to always read from window.userData
     function showDashboard() {
         const modalContent = document.querySelector('.modal-content');
-        const userData = window.userData;
-        const parentSettings = window.parentSettings;
-        const topics = window.topics;
+        
+        // Always read from window to get current values
+        console.log("Dashboard opening with userData:", window.userData);
         
         // Calculate statistics
-        const accuracy = userData.totalQuestions > 0 ? 
-            Math.round((userData.correctAnswers / userData.totalQuestions) * 100) : 0;
+        const accuracy = window.userData.totalQuestions > 0 ? 
+            Math.round((window.userData.correctAnswers / window.userData.totalQuestions) * 100) : 0;
         
         // Get achievement stats
         let totalAchievements = 0;
         let achievementPoints = 0;
         if (window.AchievementsModule) {
-            const allAchievements = window.AchievementsModule.getAllAchievements(userData);
+            const allAchievements = window.AchievementsModule.getAllAchievements(window.userData);
             totalAchievements = allAchievements.filter(a => a.earned).length;
-            achievementPoints = userData.achievementPoints || 0;
+            achievementPoints = window.userData.achievementPoints || 0;
         }
         
         modalContent.innerHTML = `
@@ -100,7 +101,7 @@ window.ParentDashboard = (function() {
             <h2>👨‍👩‍👦 Parent Dashboard - Jordan's Progress</h2>
             
             <div class="parent-dashboard" style="max-height: 70vh; overflow-y: auto;">
-                ${!parentSettings.initialized ? `
+                ${!window.parentSettings.initialized ? `
                     <div style="background: #fff3cd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #ffc107;">
                         <strong>⚠️ Important Security Notice:</strong><br>
                         You are using the default PIN (1234). Please change it immediately for security!
@@ -112,7 +113,7 @@ window.ParentDashboard = (function() {
                     <h3>📊 Quick Overview</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
                         <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 10px;">
-                            <div style="font-size: 2em; font-weight: bold;">${window.getReadingLevelName(userData.readingLevel)}</div>
+                            <div style="font-size: 2em; font-weight: bold;">${window.getReadingLevelName(window.userData.readingLevel)}</div>
                             <div>Reading Level</div>
                         </div>
                         <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 10px;">
@@ -120,11 +121,11 @@ window.ParentDashboard = (function() {
                             <div>Accuracy</div>
                         </div>
                         <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 10px;">
-                            <div style="font-size: 2em; font-weight: bold;">${userData.passagesRead}</div>
+                            <div style="font-size: 2em; font-weight: bold;">${window.userData.passagesRead}</div>
                             <div>Passages Read</div>
                         </div>
                         <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 10px;">
-                            <div style="font-size: 2em; font-weight: bold;">${userData.wordsLearned.length}</div>
+                            <div style="font-size: 2em; font-weight: bold;">${window.userData.wordsLearned.length}</div>
                             <div>Words Learned</div>
                         </div>
                     </div>
@@ -180,11 +181,11 @@ window.ParentDashboard = (function() {
                 <div class="parent-section">
                     <h3>📚 Topic Progress & Mastery</h3>
                     <div class="skill-report" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                        ${Object.entries(topics).map(([key, topic]) => {
-                            const progress = userData.topicProgress[key] || { completed: 0, total: 20 };
+                        ${Object.entries(window.topics).map(([key, topic]) => {
+                            const progress = window.userData.topicProgress[key] || { completed: 0, total: 20 };
                             const percent = Math.round((progress.completed / progress.total) * 100);
-                            const isMastered = userData.masteredTopics?.includes(key);
-                            const isLocked = parentSettings.lockedTopics?.includes(key);
+                            const isMastered = window.userData.masteredTopics?.includes(key);
+                            const isLocked = window.parentSettings.lockedTopics?.includes(key);
                             
                             return `
                                 <div class="skill-card" style="background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
@@ -212,14 +213,14 @@ window.ParentDashboard = (function() {
                     <h3>📅 Daily Progress</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                         <div>
-                            <p><strong>Today's Progress:</strong> ${userData.completedToday} activities completed</p>
-                            <p><strong>Daily Goal:</strong> ${parentSettings.dailyGoalOverride || userData.dailyGoal} activities</p>
-                            <p><strong>Current Streak:</strong> ${userData.currentStreak} correct answers in a row</p>
-                            <p><strong>Longest Streak:</strong> ${userData.longestStreak} answers</p>
+                            <p><strong>Today's Progress:</strong> ${window.userData.completedToday} activities completed</p>
+                            <p><strong>Daily Goal:</strong> ${window.parentSettings.dailyGoalOverride || window.userData.dailyGoal} activities</p>
+                            <p><strong>Current Streak:</strong> ${window.userData.currentStreak} correct answers in a row</p>
+                            <p><strong>Longest Streak:</strong> ${window.userData.longestStreak} answers</p>
                         </div>
                         <div>
-                            <p><strong>Total Questions:</strong> ${userData.totalQuestions}</p>
-                            <p><strong>Correct Answers:</strong> ${userData.correctAnswers}</p>
+                            <p><strong>Total Questions:</strong> ${window.userData.totalQuestions}</p>
+                            <p><strong>Correct Answers:</strong> ${window.userData.correctAnswers}</p>
                             <p><strong>Achievements Earned:</strong> ${totalAchievements}</p>
                             <p><strong>Achievement Points:</strong> ${achievementPoints}</p>
                         </div>
@@ -232,7 +233,7 @@ window.ParentDashboard = (function() {
                     <div class="settings-grid" style="display: grid; gap: 15px;">
                         <div class="setting-row" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: white; border-radius: 8px;">
                             <span>Daily Goal (activities per day)</span>
-                            <input type="number" value="${parentSettings.dailyGoalOverride || userData.dailyGoal}" 
+                            <input type="number" value="${window.parentSettings.dailyGoalOverride || window.userData.dailyGoal}" 
                                    min="5" max="50" style="width: 60px; padding: 5px; border: 1px solid #ddd; border-radius: 5px;"
                                    onchange="ParentDashboard.updateDailyGoal(this.value)">
                         </div>
@@ -241,9 +242,9 @@ window.ParentDashboard = (function() {
                             <span>Text Size for Reading</span>
                             <select onchange="ParentDashboard.updateTextSize(this.value)" 
                                     style="padding: 5px; border: 1px solid #ddd; border-radius: 5px;">
-                                <option value="small" ${parentSettings.textSizeOverride === 'small' ? 'selected' : ''}>Small</option>
-                                <option value="medium" ${(!parentSettings.textSizeOverride || parentSettings.textSizeOverride === 'medium') ? 'selected' : ''}>Medium</option>
-                                <option value="large" ${parentSettings.textSizeOverride === 'large' ? 'selected' : ''}>Large</option>
+                                <option value="small" ${window.parentSettings.textSizeOverride === 'small' ? 'selected' : ''}>Small</option>
+                                <option value="medium" ${(!window.parentSettings.textSizeOverride || window.parentSettings.textSizeOverride === 'medium') ? 'selected' : ''}>Medium</option>
+                                <option value="large" ${window.parentSettings.textSizeOverride === 'large' ? 'selected' : ''}>Large</option>
                             </select>
                         </div>
                         
@@ -251,10 +252,10 @@ window.ParentDashboard = (function() {
                             <span>Difficulty Level</span>
                             <select onchange="ParentDashboard.updateDifficulty(this.value)" 
                                     style="padding: 5px; border: 1px solid #ddd; border-radius: 5px;">
-                                <option value="adaptive" ${parentSettings.difficultyLevel === 'adaptive' ? 'selected' : ''}>Adaptive (Recommended)</option>
-                                <option value="easy" ${parentSettings.difficultyLevel === 'easy' ? 'selected' : ''}>Easy (Grade 4)</option>
-                                <option value="medium" ${parentSettings.difficultyLevel === 'medium' ? 'selected' : ''}>Medium (Grade 5)</option>
-                                <option value="hard" ${parentSettings.difficultyLevel === 'hard' ? 'selected' : ''}>Hard (Grade 6)</option>
+                                <option value="adaptive" ${window.parentSettings.difficultyLevel === 'adaptive' ? 'selected' : ''}>Adaptive (Recommended)</option>
+                                <option value="easy" ${window.parentSettings.difficultyLevel === 'easy' ? 'selected' : ''}>Easy (Grade 4)</option>
+                                <option value="medium" ${window.parentSettings.difficultyLevel === 'medium' ? 'selected' : ''}>Medium (Grade 5)</option>
+                                <option value="hard" ${window.parentSettings.difficultyLevel === 'hard' ? 'selected' : ''}>Hard (Grade 6)</option>
                             </select>
                         </div>
                     </div>
@@ -265,14 +266,14 @@ window.ParentDashboard = (function() {
                     <h3>🔒 Topic Access Control</h3>
                     <p style="margin-bottom: 15px;">Toggle topics on/off to control what Jordan can practice:</p>
                     <div style="display: grid; gap: 10px;">
-                        ${Object.entries(topics).map(([key, topic]) => `
+                        ${Object.entries(window.topics).map(([key, topic]) => `
                             <div class="setting-row" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: white; border-radius: 8px;">
                                 <span>${topic.icon} ${topic.name}</span>
                                 <button onclick="ParentDashboard.toggleTopicLock('${key}')" 
                                         style="padding: 5px 15px; border-radius: 5px; border: none; cursor: pointer;
-                                               background: ${!parentSettings.lockedTopics?.includes(key) ? '#10b981' : '#ef4444'};
+                                               background: ${!window.parentSettings.lockedTopics?.includes(key) ? '#10b981' : '#ef4444'};
                                                color: white;">
-                                    ${!parentSettings.lockedTopics?.includes(key) ? 'Enabled ✓' : 'Locked 🔒'}
+                                    ${!window.parentSettings.lockedTopics?.includes(key) ? 'Enabled ✓' : 'Locked 🔒'}
                                 </button>
                             </div>
                         `).join('')}
@@ -302,196 +303,4 @@ window.ParentDashboard = (function() {
                 <div class="parent-section" style="background: #e8f4f8; border: 2px solid #667eea;">
                     <h3>💡 Parent Tips & Insights</h3>
                     <ul style="line-height: 1.8; padding-left: 20px;">
-                        <li><strong>Jordan's Current Challenge:</strong> Reading comprehension at 4th grade level (needs 6th grade)</li>
-                        <li><strong>Focus Areas:</strong> 
-                            <ul>
-                                <li>Finding main ideas in passages</li>
-                                <li>Understanding cause and effect relationships</li>
-                                <li>Using context clues for vocabulary</li>
-                                <li>Making inferences from text</li>
-                            </ul>
-                        </li>
-                        <li><strong>Recommended Practice:</strong> 15-20 minutes daily, focusing on comprehension first</li>
-                        <li><strong>Soccer Theme:</strong> We use soccer examples throughout to maintain engagement!</li>
-                        <li><strong>Progress Tracking:</strong> Check weekly to monitor improvement trends</li>
-                        <li><strong>Next IXL Assessment:</strong> Recommended in 2-3 months to measure growth</li>
-                    </ul>
-                </div>
-            </div>
-        `;
-    }
-    
-    // Show change PIN screen
-    function showChangePIN() {
-        const modalContent = document.querySelector('.modal-content');
-        
-        modalContent.innerHTML = `
-            <span class="close" onclick="ParentDashboard.showDashboard()">← Back</span>
-            <h2>🔐 Change Security PIN</h2>
-            <div style="text-align: center; padding: 20px;">
-                <div style="margin-bottom: 20px;">
-                    <p>Enter new 4-digit PIN:</p>
-                    <input type="password" id="newPIN" maxlength="4" pattern="[0-9]*" inputmode="numeric"
-                           style="font-size: 24px; padding: 10px; width: 150px; text-align: center; 
-                                  border: 2px solid #667eea; border-radius: 10px;">
-                </div>
-                <div style="margin-bottom: 20px;">
-                    <p>Confirm new PIN:</p>
-                    <input type="password" id="confirmPIN" maxlength="4" pattern="[0-9]*" inputmode="numeric"
-                           style="font-size: 24px; padding: 10px; width: 150px; text-align: center; 
-                                  border: 2px solid #667eea; border-radius: 10px;">
-                </div>
-                <button class="btn btn-primary" onclick="ParentDashboard.changePIN()" 
-                        style="background: #667eea; color: white; padding: 10px 30px; border: none; border-radius: 5px; cursor: pointer;">
-                    Save New PIN
-                </button>
-                <div id="pinChangeError" style="color: red; margin-top: 10px;"></div>
-            </div>
-        `;
-    }
-    
-    // Change PIN
-    function changePIN() {
-        const newPIN = document.getElementById('newPIN').value;
-        const confirmPIN = document.getElementById('confirmPIN').value;
-        const errorDiv = document.getElementById('pinChangeError');
-        
-        if (newPIN.length !== 4 || !/^\d{4}$/.test(newPIN)) {
-            errorDiv.textContent = 'PIN must be exactly 4 digits';
-            return;
-        }
-        
-        if (newPIN !== confirmPIN) {
-            errorDiv.textContent = 'PINs do not match';
-            return;
-        }
-        
-        if (newPIN === '1234') {
-            errorDiv.textContent = 'Please choose a PIN other than 1234';
-            return;
-        }
-        
-        window.parentSettings.pinHash = window.hashPIN(newPIN);
-        window.parentSettings.initialized = true;
-        window.parentSettings.lastPinChange = new Date().toISOString();
-        window.saveParentSettings();
-        
-        alert('✅ PIN changed successfully!');
-        showDashboard();
-    }
-    
-    // Update daily goal
-    function updateDailyGoal(value) {
-        const goal = parseInt(value);
-        if (goal >= 5 && goal <= 50) {
-            window.parentSettings.dailyGoalOverride = goal;
-            window.saveParentSettings();
-            window.updateDailyProgress();
-        }
-    }
-    
-    // Update text size
-    function updateTextSize(value) {
-        window.parentSettings.textSizeOverride = value;
-        window.userData.preferences.textSize = value;
-        window.saveParentSettings();
-        window.saveUserData();
-    }
-    
-    // Update difficulty
-    function updateDifficulty(value) {
-        window.parentSettings.difficultyLevel = value;
-        
-        // Adjust reading level based on difficulty
-        if (value === 'easy') {
-            window.userData.readingLevel = 440; // 4th grade
-        } else if (value === 'medium') {
-            window.userData.readingLevel = 520; // 5th grade
-        } else if (value === 'hard') {
-            window.userData.readingLevel = 620; // 6th grade
-        }
-        // 'adaptive' keeps current level
-        
-        window.saveParentSettings();
-        window.saveUserData();
-        window.updateStats();
-    }
-    
-    // Toggle topic lock
-    function toggleTopicLock(topic) {
-        if (!window.parentSettings.lockedTopics) {
-            window.parentSettings.lockedTopics = [];
-        }
-        
-        const index = window.parentSettings.lockedTopics.indexOf(topic);
-        if (index === -1) {
-            window.parentSettings.lockedTopics.push(topic);
-        } else {
-            window.parentSettings.lockedTopics.splice(index, 1);
-        }
-        
-        window.saveParentSettings();
-        showDashboard(); // Refresh display
-    }
-    
-    // Export user data
-    function exportData() {
-        const dataStr = JSON.stringify(window.userData, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `jordan-english-progress-${new Date().toISOString().split('T')[0]}.json`;
-        link.click();
-        URL.revokeObjectURL(url);
-    }
-    
-    // Reset all progress
-    function resetProgress() {
-        if (confirm('⚠️ WARNING: This will reset ALL of Jordan\'s progress including achievements, words learned, and statistics. This cannot be undone. Are you sure?')) {
-            if (confirm('Are you REALLY sure? All data will be permanently deleted.')) {
-                // Reset user data to defaults
-                window.userData = {
-                    readingLevel: 460,
-                    wordsLearned: [],
-                    passagesRead: 0,
-                    totalQuestions: 0,
-                    correctAnswers: 0,
-                    currentStreak: 0,
-                    longestStreak: 0,
-                    dailyGoal: 10,
-                    completedToday: 0,
-                    lastActivity: new Date().toISOString(),
-                    topicProgress: {},
-                    vocabularyMastery: {},
-                    achievements: [],
-                    preferences: window.userData.preferences,
-                    sessionsCompleted: {},
-                    masteredTopics: []
-                };
-                
-                window.saveUserData();
-                window.updateStats();
-                window.updateDailyProgress();
-                
-                alert('✅ All progress has been reset.');
-                showDashboard();
-            }
-        }
-    }
-    
-    // Public API
-    return {
-        show: show,
-        verifyPIN: verifyPIN,
-        showDashboard: showDashboard,
-        showChangePIN: showChangePIN,
-        changePIN: changePIN,
-        updateDailyGoal: updateDailyGoal,
-        updateTextSize: updateTextSize,
-        updateDifficulty: updateDifficulty,
-        toggleTopicLock: toggleTopicLock,
-        exportData: exportData,
-        resetProgress: resetProgress
-    };
-})();
+                        <li><strong>Jordan's Current Challenge:</strong> Reading comprehension at 4th grade level (needs
