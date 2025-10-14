@@ -338,7 +338,7 @@ function startTopic(topicKey) {
     console.log('🔍 topic:', topic);  // ADD THIS LINE
     console.log('🔍 topic.generator:', topic?.generator);  // ADD THIS LINE
     
-    if (topic && topic.generator) {
+    if (topic) {
         if (topicKey === 'comprehension') {
             // Check if PassagesModule is loaded
             if (window.PassagesModule && window.PassagesModule.startComprehension) {
