@@ -75,28 +75,24 @@ const topics = {
         icon: "📖",
         skills: ["Main ideas", "Cause & effect", "Character analysis", "Inferences", "Themes"],
         level: 440,
-        generator: window.PassagesModule
     },
     vocabulary: {
         name: "Vocabulary Building",
         icon: "🔤",
         skills: ["Context clues", "Word meanings", "Idioms", "Synonyms", "Antonyms"],
         level: 520,
-        generator: window.VocabularyModule
     },
     writing: {
         name: "Writing Skills",
         icon: "✍️",
         skills: ["Sentence ordering", "Supporting details", "Conclusions", "Opinion writing"],
         level: 500,
-        generator: window.WritingModule
     },
     grammar: {
         name: "Grammar Practice",
         icon: "📝",
         skills: ["Verb tenses", "Sentence structure", "Punctuation", "Parts of speech"],
         level: 620,
-        generator: window.GrammarModule
     }
 };
 
