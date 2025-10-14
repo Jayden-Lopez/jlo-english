@@ -335,8 +335,8 @@ function startTopic(topicKey) {
     document.getElementById('questionContainer').style.display = 'block';
     
     const topic = topics[topicKey];
-    console.log('🔍 topic:', topic);  // ADD THIS LINE
-    console.log('🔍 topic.generator:', topic?.generator);  // ADD THIS LINE
+    console.log('🔍 topic:', topic);
+    console.log('🔍 topic.generator:', topic?.generator);
     
     if (topic) {
         if (topicKey === 'comprehension') {
@@ -347,8 +347,27 @@ function startTopic(topicKey) {
                 alert("Reading module is loading... Please try again.");
                 backToTopics();
             }
-        } else if (topic.generator && topic.generator.startPractice) {
-            topic.generator.startPractice();
+        } else if (topicKey === 'vocabulary') {
+            if (window.VocabularyModule && window.VocabularyModule.startPractice) {
+                window.VocabularyModule.startPractice();
+            } else {
+                alert("Vocabulary module is loading... Please try again.");
+                backToTopics();
+            }
+        } else if (topicKey === 'writing') {
+            if (window.WritingModule && window.WritingModule.startPractice) {
+                window.WritingModule.startPractice();
+            } else {
+                alert("Writing module coming soon!");
+                backToTopics();
+            }
+        } else if (topicKey === 'grammar') {
+            if (window.GrammarModule && window.GrammarModule.startPractice) {
+                window.GrammarModule.startPractice();
+            } else {
+                alert("Grammar module coming soon!");
+                backToTopics();
+            }
         } else {
             alert(`${topic.name} module coming soon!`);
             backToTopics();
