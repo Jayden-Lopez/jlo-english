@@ -331,6 +331,9 @@ function createTopicCards() {
 // ========== TOPIC MANAGEMENT ==========
 
 function startTopic(topicKey) {
+    console.log('🎯 Starting topic:', topicKey);
+    console.log('📦 PassagesModule exists?', !!window.PassagesModule);
+    console.log('🚀 startComprehension exists?', !!window.PassagesModule?.startComprehension);
     currentTopic = topicKey;
     document.getElementById('topicSelection').style.display = 'none';
     document.getElementById('questionContainer').style.display = 'block';
