@@ -4,6 +4,8 @@
 const APP_VERSION = '1.0.0';
 const CACHE_BUSTER = Date.now(); 
 
+import { MasteryTracker } from './modules/mastery-tracker.js';
+
 // Firebase Configuration - Using your existing math practice project
 const firebaseConfig = {
     apiKey: "AIzaSyDYpd-RQ3G7fiAZvT8Crx3lU5gVjbvLjHU",
