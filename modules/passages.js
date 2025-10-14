@@ -633,25 +633,32 @@ window.PassagesModule = (function() {
     
     // Start comprehension practice
     function startComprehension(userData, parentSettings) {
-        console.log("Starting Reading Comprehension...");
+        console.log("✅ Starting Reading Comprehension...");
+        console.log("📊 userData:", userData);
+        console.log("⚙️ parentSettings:", parentSettings);
         
         // Get current grade level from mastery tracker
         const currentGrade = window.MasteryTracker ? 
             window.MasteryTracker.getCurrentGradeLevel('comprehension') : 'grade4';
+        console.log("📚 Current grade:", currentGrade);
         
         // Get weak areas to focus on
         const weakAreas = window.MasteryTracker ? 
             window.MasteryTracker.getWeakAreas('comprehension') : [];
+        console.log("🎯 Weak areas:", weakAreas);
         
         // Use adaptive selection to choose passage targeting weak skills
         currentPassage = selectAdaptivePassage(currentGrade, weakAreas);
+        console.log("📖 Selected passage:", currentPassage);
         
         currentQuestionIndex = 0;
         sessionCorrect = 0;
         sessionTotal = 0;
         
+        console.log("🚀 About to show passage...");
         // Show passage first
         showPassage();
+        console.log("✅ showPassage() called!");
     }
     
     // Show the reading passage
