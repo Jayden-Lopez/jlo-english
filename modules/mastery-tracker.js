@@ -1,6 +1,7 @@
 // mastery-tracker.js - Track skill mastery and suggest focus areas
 
-window.MasteryTracker = (function() {
+export const MasteryTracker = (function() {
+    
     'use strict';
     
     // Reading comprehension sub-skills to track
@@ -292,3 +293,7 @@ window.MasteryTracker = (function() {
         GRADE_LEVELS: GRADE_LEVELS
     };
 })();
+
+// Add these two lines right after the })();
+export default MasteryTracker;
+export { MasteryTracker };
