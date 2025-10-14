@@ -339,6 +339,9 @@ function startTopic(topicKey) {
     document.getElementById('questionContainer').style.display = 'block';
     
     const topic = topics[topicKey];
+    console.log('🔍 topic:', topic);  // ADD THIS LINE
+    console.log('🔍 topic.generator:', topic?.generator);  // ADD THIS LINE
+    
     if (topic && topic.generator) {
         if (topicKey === 'comprehension') {
             // Check if PassagesModule is loaded
