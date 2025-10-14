@@ -293,7 +293,3 @@ window.MasteryTracker = (function() {
         GRADE_LEVELS: GRADE_LEVELS
     };
 })();
-
-// Add these two lines right after the })();
-export default MasteryTracker;
-export { MasteryTracker };
