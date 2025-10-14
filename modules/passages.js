@@ -632,7 +632,7 @@ window.PassagesModule = (function() {
     };
     
     // Start comprehension practice
-    function startComprehension() {
+    function startComprehension(userData, parentSettings) {
         console.log("Starting Reading Comprehension...");
         
         // Get current grade level from mastery tracker
