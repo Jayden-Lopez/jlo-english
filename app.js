@@ -1,10 +1,10 @@
 // app.js - Jordan's English Practice App Core with Firebase
 // Version 1.0.0
 
+import { MasteryTracker } from './modules/mastery-tracker.js';
+
 const APP_VERSION = '1.0.0';
 const CACHE_BUSTER = Date.now(); 
-
-import { MasteryTracker } from './modules/mastery-tracker.js';
 
 // Firebase Configuration - Using your existing math practice project
 const firebaseConfig = {
