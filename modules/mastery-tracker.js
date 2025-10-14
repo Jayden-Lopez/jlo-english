@@ -1,6 +1,6 @@
 // mastery-tracker.js - Track skill mastery and suggest focus areas
 
-export const MasteryTracker = (function() {
+window.MasteryTracker = (function() {
     
     'use strict';
     
