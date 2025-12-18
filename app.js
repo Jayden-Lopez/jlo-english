@@ -99,17 +99,20 @@ const topics = {
 // ========== INITIALIZATION ==========
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('Jordan\'s English Practice App v' + APP_VERSION + ' loading...');
-    
+
     // Load data
     await loadUserData();
     await loadParentSettings();
-    
+
     // Initialize app
     checkDailyReset();
     initializeTopics();
     updateStats();
     updateDailyProgress();
-    
+
+    // Load curriculum and render today's learning plan
+    loadCurriculum();
+
     console.log('App loaded successfully!');
 });
 
@@ -730,3 +733,361 @@ window.closeAchievement = closeAchievement;
 window.getReadingLevelName = getReadingLevelName;
 window.checkAchievements = checkAchievements;
 window.showParentDashboard = showParentDashboard;
+
+// ============================================
+// CURRICULUM & DAILY GOALS MANAGEMENT
+// ============================================
+
+// Default weekly schedule template for English
+const defaultWeeklySchedule = {
+    monday: { topics: ['comprehension'], goalActivities: 10, focusArea: "Reading Comprehension" },
+    tuesday: { topics: ['vocabulary'], goalActivities: 10, focusArea: "Vocabulary Building" },
+    wednesday: { topics: ['grammar'], goalActivities: 10, focusArea: "Grammar Practice" },
+    thursday: { topics: ['writing'], goalActivities: 10, focusArea: "Writing Skills" },
+    friday: { topics: ['comprehension', 'vocabulary'], goalActivities: 15, focusArea: "Weekly Review" },
+    saturday: { topics: [], goalActivities: 5, focusArea: "Light Practice (Optional)" },
+    sunday: { topics: [], goalActivities: 0, focusArea: "Rest Day" }
+};
+
+// Curriculum state
+let curriculumSchedule = null;
+let targetReadingLevel = '6th'; // Target grade level
+
+// Get day name
+function getDayName() {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    return days[new Date().getDay()];
+}
+
+// Get today's schedule
+function getTodaySchedule() {
+    const schedule = curriculumSchedule || defaultWeeklySchedule;
+    const today = getDayName();
+    return schedule[today] || { topics: [], goalActivities: 0, focusArea: "Free Practice" };
+}
+
+// Get recommended topics
+function getRecommendedTopics() {
+    const todaySchedule = getTodaySchedule();
+    const recommended = [];
+
+    // Add scheduled topics
+    todaySchedule.topics.forEach(topicKey => {
+        if (topics[topicKey]) {
+            recommended.push(topicKey);
+        }
+    });
+
+    // If no scheduled topics, recommend based on progress
+    if (recommended.length === 0) {
+        // Find topics that need work (low progress)
+        for (const [key, topic] of Object.entries(topics)) {
+            const progress = userData.topicProgress[key] || { completed: 0, total: 20 };
+            if (progress.completed < 10) {
+                recommended.push(key);
+            }
+        }
+    }
+
+    // Add weak topics (low accuracy in that area)
+    for (const [key, topic] of Object.entries(topics)) {
+        const progress = userData.topicProgress[key] || { completed: 0, total: 20 };
+        if (progress.completed >= 5 && progress.completed < 15 && !recommended.includes(key)) {
+            recommended.push(key);
+        }
+    }
+
+    return recommended.slice(0, 3);
+}
+
+// Load curriculum from Firebase
+async function loadCurriculum() {
+    try {
+        const doc = await db.collection('english-settings').doc('curriculum').get();
+        if (doc.exists) {
+            const data = doc.data();
+            curriculumSchedule = data.weeklySchedule || defaultWeeklySchedule;
+            targetReadingLevel = data.targetReadingLevel || '6th';
+        } else {
+            await saveCurriculum();
+        }
+    } catch (error) {
+        console.error('Error loading curriculum:', error);
+    }
+    renderTodayLearning();
+}
+
+// Save curriculum to Firebase
+async function saveCurriculum() {
+    try {
+        await db.collection('english-settings').doc('curriculum').set({
+            weeklySchedule: curriculumSchedule || defaultWeeklySchedule,
+            targetReadingLevel: targetReadingLevel
+        });
+    } catch (error) {
+        console.error('Error saving curriculum:', error);
+    }
+}
+
+// Render Today's Learning section
+function renderTodayLearning() {
+    const container = document.getElementById('todayLearning');
+    if (!container) return;
+
+    const todaySchedule = getTodaySchedule();
+    const recommended = getRecommendedTopics();
+    const dayName = getDayName();
+    const formattedDay = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+
+    const goalAmount = todaySchedule.goalActivities || 10;
+    const completed = userData.completedToday || 0;
+    const goalProgress = goalAmount > 0 ? Math.min((completed / goalAmount) * 100, 100) : 100;
+    const goalMet = completed >= goalAmount;
+
+    const accuracy = userData.totalQuestions > 0
+        ? Math.round((userData.correctAnswers / userData.totalQuestions) * 100)
+        : 0;
+
+    let recommendedHTML = '';
+    if (recommended.length > 0) {
+        recommendedHTML = recommended.map(topicKey => {
+            const topic = topics[topicKey];
+            const progress = userData.topicProgress[topicKey] || { completed: 0, total: 20 };
+            const needsWork = progress.completed >= 5 && progress.completed < 15;
+            const isFocus = todaySchedule.topics.includes(topicKey);
+            const isNew = progress.completed === 0;
+
+            return `
+                <div class="recommended-topic ${needsWork ? 'needs-work' : ''}" onclick="startTopic('${topicKey}')">
+                    <div class="rec-topic-info">
+                        <span class="rec-topic-icon">${topic.icon}</span>
+                        <span class="rec-topic-name">${topic.name}</span>
+                    </div>
+                    <div class="rec-topic-tags">
+                        ${isFocus ? '<span class="tag tag-focus">Today\'s Focus</span>' : ''}
+                        ${needsWork ? '<span class="tag tag-review">Keep Practicing</span>' : ''}
+                        ${isNew ? '<span class="tag tag-new">New</span>' : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } else {
+        recommendedHTML = '<p class="no-rec">Great job! Feel free to practice any topic you like.</p>';
+    }
+
+    container.innerHTML = `
+        <div class="today-header">
+            <h2>Today's Learning Plan</h2>
+            <span class="today-date">${formattedDay}, ${new Date().toLocaleDateString()}</span>
+        </div>
+
+        <div class="today-focus">
+            <span class="focus-label">Focus:</span>
+            <span class="focus-area">${todaySchedule.focusArea}</span>
+            <span class="current-level-tag">Current: ${getReadingLevelName(userData.readingLevel)} | Target: ${targetReadingLevel} Grade</span>
+        </div>
+
+        <div class="daily-goal-section">
+            <div class="goal-header">
+                <span class="goal-title">Daily Goal</span>
+                <span class="goal-status ${goalMet ? 'goal-complete' : ''}">${goalMet ? 'Complete!' : `${completed}/${goalAmount} activities`}</span>
+            </div>
+            <div class="goal-progress-bar">
+                <div class="goal-progress-fill ${goalMet ? 'complete' : ''}" style="width: ${goalProgress}%"></div>
+            </div>
+            <div class="daily-stats-row">
+                <span>Today's Accuracy: ${accuracy}%</span>
+                <span>Streak: ${userData.currentStreak} 🔥</span>
+            </div>
+        </div>
+
+        <div class="recommended-section">
+            <h3>Recommended for Today</h3>
+            <div class="recommended-topics">
+                ${recommendedHTML}
+            </div>
+        </div>
+    `;
+}
+
+// Render curriculum planner in parent dashboard
+function renderCurriculumPlanner() {
+    const container = document.getElementById('curriculumPlanner');
+    if (!container) return;
+
+    const schedule = curriculumSchedule || defaultWeeklySchedule;
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+    let scheduleHTML = days.map(day => {
+        const daySchedule = schedule[day];
+        const formattedDay = day.charAt(0).toUpperCase() + day.slice(1);
+
+        return `
+            <div class="schedule-day">
+                <div class="day-name">${formattedDay}</div>
+                <div class="day-details">
+                    <div class="day-focus">${daySchedule.focusArea}</div>
+                    <div class="day-goal">${daySchedule.goalActivities} activities</div>
+                    <div class="day-topics">
+                        ${daySchedule.topics.length > 0
+                            ? daySchedule.topics.map(t => topics[t]?.icon + ' ' + topics[t]?.name).join(', ')
+                            : 'Free choice'}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    const levelOptions = ['3rd', '4th', '5th', '6th', '7th'].map(level =>
+        `<option value="${level}" ${level === targetReadingLevel ? 'selected' : ''}>${level} Grade</option>`
+    ).join('');
+
+    container.innerHTML = `
+        <div class="curriculum-planner-section">
+            <h3>Curriculum Settings</h3>
+
+            <div class="level-sync-section">
+                <label for="targetLevelSelect">Jordan's Target Reading Level:</label>
+                <select id="targetLevelSelect" onchange="updateTargetLevel(this.value)">
+                    ${levelOptions}
+                </select>
+                <p class="helper-text">Current level: ${getReadingLevelName(userData.readingLevel)}. Set the target to track progress toward the goal.</p>
+            </div>
+
+            <h3>Weekly Schedule</h3>
+            <div class="weekly-schedule">
+                ${scheduleHTML}
+            </div>
+
+            <div class="schedule-actions">
+                <button class="btn btn-secondary" onclick="editWeeklySchedule()">Edit Schedule</button>
+                <button class="btn btn-secondary" onclick="resetToDefaultSchedule()">Reset to Default</button>
+            </div>
+        </div>
+    `;
+}
+
+// Update target reading level
+function updateTargetLevel(level) {
+    targetReadingLevel = level;
+    saveCurriculum();
+    renderTodayLearning();
+    renderCurriculumPlanner();
+}
+
+// Edit weekly schedule
+function editWeeklySchedule() {
+    let modal = document.getElementById('scheduleModal');
+    if (!modal) {
+        const modalHTML = `
+            <div id="scheduleModal" class="modal" style="display:none;">
+                <div class="modal-content schedule-modal">
+                    <span class="close" onclick="closeScheduleModal()">&times;</span>
+                    <h3>Edit Weekly Schedule</h3>
+                    <div id="scheduleEditForm"></div>
+                    <div class="modal-actions">
+                        <button class="btn btn-primary" onclick="saveScheduleChanges()">Save Changes</button>
+                        <button class="btn btn-secondary" onclick="closeScheduleModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        modal = document.getElementById('scheduleModal');
+    }
+    populateScheduleModal();
+    modal.style.display = 'flex';
+}
+
+// Populate schedule modal
+function populateScheduleModal() {
+    const form = document.getElementById('scheduleEditForm');
+    if (!form) return;
+
+    const schedule = curriculumSchedule || defaultWeeklySchedule;
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+    const topicOptions = Object.entries(topics).map(([key, topic]) =>
+        `<option value="${key}">${topic.icon} ${topic.name}</option>`
+    ).join('');
+
+    form.innerHTML = days.map(day => {
+        const daySchedule = schedule[day];
+        const formattedDay = day.charAt(0).toUpperCase() + day.slice(1);
+
+        return `
+            <div class="schedule-edit-day">
+                <h4>${formattedDay}</h4>
+                <div class="schedule-edit-fields">
+                    <label>
+                        Focus Area:
+                        <input type="text" id="focus_${day}" value="${daySchedule.focusArea}" />
+                    </label>
+                    <label>
+                        Daily Goal (activities):
+                        <input type="number" id="goal_${day}" value="${daySchedule.goalActivities}" min="0" max="50" />
+                    </label>
+                    <label>
+                        Topics (hold Ctrl/Cmd to select multiple):
+                        <select id="topics_${day}" multiple size="4">
+                            ${Object.entries(topics).map(([key, topic]) =>
+                                `<option value="${key}" ${daySchedule.topics.includes(key) ? 'selected' : ''}>${topic.icon} ${topic.name}</option>`
+                            ).join('')}
+                        </select>
+                    </label>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Save schedule changes
+function saveScheduleChanges() {
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const newSchedule = {};
+
+    days.forEach(day => {
+        const focus = document.getElementById(`focus_${day}`).value;
+        const goal = parseInt(document.getElementById(`goal_${day}`).value) || 0;
+        const topicsSelect = document.getElementById(`topics_${day}`);
+        const selectedTopics = Array.from(topicsSelect.selectedOptions).map(opt => opt.value);
+
+        newSchedule[day] = {
+            focusArea: focus,
+            goalActivities: goal,
+            topics: selectedTopics
+        };
+    });
+
+    curriculumSchedule = newSchedule;
+    saveCurriculum();
+    closeScheduleModal();
+    renderCurriculumPlanner();
+    renderTodayLearning();
+}
+
+// Close schedule modal
+function closeScheduleModal() {
+    const modal = document.getElementById('scheduleModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// Reset to default schedule
+function resetToDefaultSchedule() {
+    if (confirm('Reset to the default weekly schedule?')) {
+        curriculumSchedule = JSON.parse(JSON.stringify(defaultWeeklySchedule));
+        saveCurriculum();
+        renderCurriculumPlanner();
+        renderTodayLearning();
+    }
+}
+
+// Export curriculum functions
+window.loadCurriculum = loadCurriculum;
+window.renderTodayLearning = renderTodayLearning;
+window.renderCurriculumPlanner = renderCurriculumPlanner;
+window.updateTargetLevel = updateTargetLevel;
+window.editWeeklySchedule = editWeeklySchedule;
+window.saveScheduleChanges = saveScheduleChanges;
+window.closeScheduleModal = closeScheduleModal;
+window.resetToDefaultSchedule = resetToDefaultSchedule;

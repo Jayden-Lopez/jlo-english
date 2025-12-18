@@ -411,21 +411,26 @@ window.ParentDashboard = (function() {
                 <div class="parent-section">
                     <h3>🔐 Security Settings</h3>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button class="btn btn-primary" onclick="ParentDashboard.showChangePIN()" 
+                        <button class="btn btn-primary" onclick="ParentDashboard.showChangePIN()"
                                 style="background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
                             Change PIN
                         </button>
-                        <button class="btn btn-secondary" onclick="ParentDashboard.exportData()" 
+                        <button class="btn btn-secondary" onclick="ParentDashboard.exportData()"
                                 style="background: #6b7280; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
                             Export Progress Data
                         </button>
-                        <button class="btn btn-secondary" onclick="ParentDashboard.resetProgress()" 
+                        <button class="btn btn-secondary" onclick="ParentDashboard.resetProgress()"
                                 style="background: #ef4444; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
                             Reset All Progress
                         </button>
                     </div>
                 </div>
-                
+
+                <!-- Curriculum Planner Section -->
+                <div id="curriculumPlanner" class="parent-section">
+                    <!-- Will be populated by renderCurriculumPlanner() -->
+                </div>
+
                 <!-- Tips for Parents -->
                 <div class="parent-section" style="background: #e8f4f8; border: 2px solid #667eea;">
                     <h3>💡 Parent Tips & Insights</h3>
@@ -441,8 +446,13 @@ window.ParentDashboard = (function() {
                 </div>
             </div>
         `;
+
+        // Render the curriculum planner section
+        if (window.renderCurriculumPlanner) {
+            window.renderCurriculumPlanner();
+        }
     }
-    
+
     // Show change PIN screen
     function showChangePIN() {
         const modalContent = document.querySelector('.modal-content');

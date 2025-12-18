@@ -610,3 +610,377 @@ body {
 .toggle-switch.active .toggle-slider {
     left: 28px;
 }
+
+/* Today's Learning Section Styles */
+.today-learning {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border: 2px solid #4CAF50;
+    border-radius: 15px;
+    padding: 25px;
+    margin: 20px 0;
+}
+
+.today-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.today-header h2 {
+    color: #2E7D32;
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.today-date {
+    color: #558B2F;
+    font-weight: 500;
+}
+
+.today-focus {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.focus-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.focus-area {
+    background: #4CAF50;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.current-level-tag {
+    background: #667eea;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9em;
+}
+
+.daily-goal-section {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.goal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.goal-title {
+    font-weight: bold;
+    color: #333;
+    font-size: 1.1em;
+}
+
+.goal-status {
+    color: #666;
+    font-weight: 500;
+}
+
+.goal-status.goal-complete {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.goal-progress-bar {
+    height: 12px;
+    background: #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.goal-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    transition: width 0.3s ease;
+    border-radius: 6px;
+}
+
+.goal-progress-fill.complete {
+    background: linear-gradient(90deg, #4CAF50, #2E7D32);
+}
+
+.daily-stats-row {
+    display: flex;
+    justify-content: space-between;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.recommended-section h3 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.recommended-topics {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.recommended-topic {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 2px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.recommended-topic:hover {
+    border-color: #4CAF50;
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+}
+
+.recommended-topic.needs-work {
+    border-left: 4px solid #FF9800;
+}
+
+.rec-topic-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rec-topic-icon {
+    font-size: 1.5em;
+}
+
+.rec-topic-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.rec-topic-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tag {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: bold;
+}
+
+.tag-focus {
+    background: #E3F2FD;
+    color: #1976D2;
+}
+
+.tag-review {
+    background: #FFF3E0;
+    color: #F57C00;
+}
+
+.tag-new {
+    background: #E8F5E9;
+    color: #388E3C;
+}
+
+.no-rec {
+    color: #666;
+    font-style: italic;
+    padding: 15px;
+    text-align: center;
+}
+
+/* Curriculum Planner Styles */
+.curriculum-planner-section {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 2px solid #e0e0e0;
+}
+
+.curriculum-planner-section h3 {
+    color: #667eea;
+    margin-bottom: 20px;
+}
+
+.level-sync-section {
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+}
+
+.level-sync-section label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #333;
+}
+
+.level-sync-section select {
+    width: 100%;
+    max-width: 400px;
+    padding: 12px;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+.helper-text {
+    color: #666;
+    font-size: 0.9em;
+    margin-top: 10px;
+}
+
+.weekly-schedule {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.schedule-day {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.day-name {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 10px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.day-details {
+    padding: 15px;
+}
+
+.day-focus {
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.day-goal {
+    color: #4CAF50;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+}
+
+.day-topics {
+    color: #666;
+    font-size: 0.85em;
+}
+
+.schedule-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Modal Styles for Schedule Edit */
+.schedule-modal {
+    width: 800px;
+    max-width: 95%;
+}
+
+.schedule-modal h3 {
+    color: #667eea;
+    margin-bottom: 20px;
+}
+
+.schedule-edit-day {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.schedule-edit-day h4 {
+    color: #667eea;
+    margin-bottom: 15px;
+}
+
+.schedule-edit-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.schedule-edit-fields label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: #333;
+    font-size: 0.9em;
+}
+
+.schedule-edit-fields input,
+.schedule-edit-fields select {
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 1em;
+}
+
+.schedule-edit-fields input:focus,
+.schedule-edit-fields select:focus {
+    border-color: #667eea;
+    outline: none;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+    .today-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .daily-stats-row {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .recommended-topic {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .weekly-schedule {
+        grid-template-columns: 1fr;
+    }
+
+    .schedule-modal {
+        width: 100%;
+    }
+}
