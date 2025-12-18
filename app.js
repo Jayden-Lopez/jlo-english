@@ -52,6 +52,11 @@ let userData = {
     },
     sessionsCompleted: {},
     masteredTopics: [],
+    // New: Practice streak tracking
+    dayStreak: 0,
+    longestDayStreak: 0,
+    lastPracticeDate: null,
+    practiceHistory: [], // Array of dates practiced (YYYY-MM-DD format)
     version: APP_VERSION
 };
 
@@ -65,7 +70,32 @@ let parentSettings = {
     textSizeOverride: null,
     lastPinChange: null,
     reportEmails: [],
-    weeklyReportEnabled: false
+    weeklyReportEnabled: false,
+    // IXL Assessment Scores
+    ixlScores: [
+        {
+            date: '2024-10-24',
+            scores: {
+                overallLanguageArts: 520,
+                overallReading: 470,
+                readingStrategies: 450,
+                vocabulary: 560,
+                writingStrategies: 520,
+                grammarMechanics: 630
+            }
+        },
+        {
+            date: '2024-12-17',
+            scores: {
+                overallLanguageArts: 570,
+                overallReading: 550,
+                readingStrategies: 510,
+                vocabulary: 680,
+                writingStrategies: 460,
+                grammarMechanics: 620
+            }
+        }
+    ]
 };
 
 // Topic Definitions
@@ -106,6 +136,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Initialize app
     checkDailyReset();
+    checkDayStreak(); // Check if day streak is still valid
     initializeTopics();
     updateStats();
     updateDailyProgress();
@@ -384,7 +415,7 @@ function startTopic(topicKey) {
 
 function updateProgress(isCorrect) {
     userData.totalQuestions++;
-    
+
     if (isCorrect) {
         userData.correctAnswers++;
         currentStreak++;
@@ -396,7 +427,7 @@ function updateProgress(isCorrect) {
         currentStreak = 0;
         userData.currentStreak = 0;
     }
-    
+
     // Update topic progress
     if (!userData.topicProgress[currentTopic]) {
         userData.topicProgress[currentTopic] = { completed: 0, total: 20 };
@@ -406,12 +437,15 @@ function updateProgress(isCorrect) {
     }
     
     userData.completedToday++;
-    
+
+    // Record that practice happened today (for calendar and day streak)
+    recordPracticeDay();
+
     // Save progress (don't await to keep UI responsive)
     saveUserData();
     updateStats();
     updateDailyProgress();
-    
+
     // Check achievements
     checkAchievements();
 }
@@ -735,6 +769,358 @@ window.checkAchievements = checkAchievements;
 window.showParentDashboard = showParentDashboard;
 
 // ============================================
+// PRACTICE STREAK & CALENDAR TRACKING
+// ============================================
+
+// Get today's date in YYYY-MM-DD format
+function getTodayDate() {
+    return new Date().toISOString().split('T')[0];
+}
+
+// Record that practice happened today
+function recordPracticeDay() {
+    const today = getTodayDate();
+
+    // Initialize practiceHistory if needed
+    if (!userData.practiceHistory) {
+        userData.practiceHistory = [];
+    }
+
+    // Check if already recorded today
+    if (userData.practiceHistory.includes(today)) {
+        return; // Already recorded
+    }
+
+    // Add today to practice history
+    userData.practiceHistory.push(today);
+
+    // Update day streak
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    if (userData.lastPracticeDate === yesterdayStr) {
+        // Consecutive day - increase streak
+        userData.dayStreak = (userData.dayStreak || 0) + 1;
+    } else if (userData.lastPracticeDate !== today) {
+        // Missed days - reset streak to 1
+        userData.dayStreak = 1;
+    }
+
+    // Update longest streak
+    if (userData.dayStreak > (userData.longestDayStreak || 0)) {
+        userData.longestDayStreak = userData.dayStreak;
+    }
+
+    userData.lastPracticeDate = today;
+    saveUserData();
+
+    // Update the Today's Learning display
+    renderTodayLearning();
+}
+
+// Check and update day streak on app load
+function checkDayStreak() {
+    const today = getTodayDate();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    // If last practice was before yesterday, streak is broken
+    if (userData.lastPracticeDate &&
+        userData.lastPracticeDate !== today &&
+        userData.lastPracticeDate !== yesterdayStr) {
+        userData.dayStreak = 0;
+        saveUserData();
+    }
+}
+
+// Get practice data for a specific month
+function getMonthPracticeData(year, month) {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const practiceData = [];
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const practiced = userData.practiceHistory?.includes(dateStr) || false;
+        const isToday = dateStr === getTodayDate();
+        const isFuture = new Date(dateStr) > new Date();
+
+        practiceData.push({
+            day,
+            date: dateStr,
+            practiced,
+            isToday,
+            isFuture
+        });
+    }
+
+    return practiceData;
+}
+
+// Render monthly calendar
+function renderMonthlyCalendar(year, month) {
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    const practiceData = getMonthPracticeData(year, month);
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+
+    // Count practiced days this month
+    const practicedCount = practiceData.filter(d => d.practiced).length;
+    const totalDays = practiceData.filter(d => !d.isFuture).length;
+
+    let calendarHTML = `
+        <div class="calendar-header">
+            <button onclick="changeCalendarMonth(-1)" class="cal-nav-btn">&lt;</button>
+            <span class="cal-month-name">${monthNames[month]} ${year}</span>
+            <button onclick="changeCalendarMonth(1)" class="cal-nav-btn">&gt;</button>
+        </div>
+        <div class="calendar-stats">
+            <span class="cal-stat">${practicedCount}/${totalDays} days practiced</span>
+            <span class="cal-stat">🔥 ${userData.dayStreak || 0} day streak</span>
+        </div>
+        <div class="calendar-grid">
+            ${dayNames.map(d => `<div class="cal-day-name">${d}</div>`).join('')}
+    `;
+
+    // Empty cells before first day
+    for (let i = 0; i < firstDayOfMonth; i++) {
+        calendarHTML += `<div class="cal-day empty"></div>`;
+    }
+
+    // Days of the month
+    practiceData.forEach(dayData => {
+        let classes = 'cal-day';
+        if (dayData.practiced) classes += ' practiced';
+        if (dayData.isToday) classes += ' today';
+        if (dayData.isFuture) classes += ' future';
+
+        calendarHTML += `
+            <div class="${classes}">
+                <span class="day-num">${dayData.day}</span>
+                ${dayData.practiced ? '<span class="check">✓</span>' : ''}
+            </div>
+        `;
+    });
+
+    calendarHTML += `</div>`;
+
+    return calendarHTML;
+}
+
+// Calendar navigation state
+let calendarYear = new Date().getFullYear();
+let calendarMonth = new Date().getMonth();
+
+function changeCalendarMonth(delta) {
+    calendarMonth += delta;
+    if (calendarMonth > 11) {
+        calendarMonth = 0;
+        calendarYear++;
+    } else if (calendarMonth < 0) {
+        calendarMonth = 11;
+        calendarYear--;
+    }
+
+    const calendarContainer = document.getElementById('practiceCalendar');
+    if (calendarContainer) {
+        calendarContainer.innerHTML = renderMonthlyCalendar(calendarYear, calendarMonth);
+    }
+}
+
+// Render IXL Progress Tracker
+function renderIXLProgress() {
+    const scores = parentSettings.ixlScores || [];
+    if (scores.length < 2) {
+        return `<p>Add at least 2 IXL assessments to see progress trends.</p>`;
+    }
+
+    const latest = scores[scores.length - 1];
+    const previous = scores[scores.length - 2];
+
+    const areas = [
+        { key: 'overallLanguageArts', name: 'Overall Language Arts', icon: '📚' },
+        { key: 'overallReading', name: 'Overall Reading', icon: '📖' },
+        { key: 'readingStrategies', name: 'Reading Strategies', icon: '🎯' },
+        { key: 'vocabulary', name: 'Vocabulary', icon: '🔤' },
+        { key: 'writingStrategies', name: 'Writing Strategies', icon: '✍️' },
+        { key: 'grammarMechanics', name: 'Grammar & Mechanics', icon: '📝' }
+    ];
+
+    const formatDate = (dateStr) => {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+
+    let html = `
+        <div class="ixl-progress-header">
+            <h4>IXL Assessment Progress</h4>
+            <div class="ixl-dates">
+                <span>${formatDate(previous.date)}</span>
+                <span>→</span>
+                <span>${formatDate(latest.date)}</span>
+            </div>
+        </div>
+        <div class="ixl-progress-grid">
+    `;
+
+    areas.forEach(area => {
+        const prevScore = previous.scores[area.key] || 0;
+        const currScore = latest.scores[area.key] || 0;
+        const change = currScore - prevScore;
+        const isPositive = change >= 0;
+        const gradeLevel = getGradeFromScore(currScore);
+
+        html += `
+            <div class="ixl-area ${isPositive ? 'improved' : 'declined'}">
+                <div class="ixl-area-header">
+                    <span class="ixl-icon">${area.icon}</span>
+                    <span class="ixl-name">${area.name}</span>
+                </div>
+                <div class="ixl-scores">
+                    <span class="ixl-prev">${prevScore}</span>
+                    <span class="ixl-arrow">→</span>
+                    <span class="ixl-curr">${currScore}</span>
+                </div>
+                <div class="ixl-change ${isPositive ? 'positive' : 'negative'}">
+                    ${isPositive ? '✅' : '⚠️'} ${isPositive ? '+' : ''}${change}
+                </div>
+                <div class="ixl-grade">Level: ${gradeLevel}</div>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+
+    // Add button to record new assessment
+    html += `
+        <div class="ixl-actions">
+            <button class="btn btn-primary" onclick="showAddIXLScore()">
+                + Add New Assessment
+            </button>
+        </div>
+    `;
+
+    return html;
+}
+
+// Get grade level from IXL score
+function getGradeFromScore(score) {
+    if (score < 400) return '3rd Grade';
+    if (score < 500) return '4th Grade';
+    if (score < 600) return '5th Grade';
+    if (score < 700) return '6th Grade';
+    return '7th Grade+';
+}
+
+// Show form to add new IXL score
+function showAddIXLScore() {
+    const modal = document.getElementById('scheduleModal');
+    if (!modal) return;
+
+    const today = getTodayDate();
+
+    modal.querySelector('.modal-content').innerHTML = `
+        <span class="close" onclick="closeScheduleModal()">&times;</span>
+        <h3>Add IXL Assessment Scores</h3>
+        <div style="padding: 20px;">
+            <div style="margin-bottom: 20px;">
+                <label><strong>Assessment Date:</strong></label>
+                <input type="date" id="ixlDate" value="${today}" style="padding: 10px; border: 2px solid #667eea; border-radius: 8px; width: 100%; max-width: 200px;">
+            </div>
+
+            <div class="ixl-input-grid" style="display: grid; gap: 15px;">
+                <div class="ixl-input-row">
+                    <label>📚 Overall Language Arts:</label>
+                    <input type="number" id="score_overallLanguageArts" placeholder="e.g., 570" min="200" max="900">
+                </div>
+                <div class="ixl-input-row">
+                    <label>📖 Overall Reading:</label>
+                    <input type="number" id="score_overallReading" placeholder="e.g., 550" min="200" max="900">
+                </div>
+                <div class="ixl-input-row">
+                    <label>🎯 Reading Strategies:</label>
+                    <input type="number" id="score_readingStrategies" placeholder="e.g., 510" min="200" max="900">
+                </div>
+                <div class="ixl-input-row">
+                    <label>🔤 Vocabulary:</label>
+                    <input type="number" id="score_vocabulary" placeholder="e.g., 680" min="200" max="900">
+                </div>
+                <div class="ixl-input-row">
+                    <label>✍️ Writing Strategies:</label>
+                    <input type="number" id="score_writingStrategies" placeholder="e.g., 460" min="200" max="900">
+                </div>
+                <div class="ixl-input-row">
+                    <label>📝 Grammar & Mechanics:</label>
+                    <input type="number" id="score_grammarMechanics" placeholder="e.g., 620" min="200" max="900">
+                </div>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="saveIXLScore()">Save Assessment</button>
+                <button class="btn btn-secondary" onclick="closeScheduleModal()">Cancel</button>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+// Save new IXL score
+async function saveIXLScore() {
+    const date = document.getElementById('ixlDate').value;
+    const scores = {
+        overallLanguageArts: parseInt(document.getElementById('score_overallLanguageArts').value) || 0,
+        overallReading: parseInt(document.getElementById('score_overallReading').value) || 0,
+        readingStrategies: parseInt(document.getElementById('score_readingStrategies').value) || 0,
+        vocabulary: parseInt(document.getElementById('score_vocabulary').value) || 0,
+        writingStrategies: parseInt(document.getElementById('score_writingStrategies').value) || 0,
+        grammarMechanics: parseInt(document.getElementById('score_grammarMechanics').value) || 0
+    };
+
+    // Validate at least one score entered
+    const hasScores = Object.values(scores).some(s => s > 0);
+    if (!hasScores) {
+        alert('Please enter at least one score.');
+        return;
+    }
+
+    if (!parentSettings.ixlScores) {
+        parentSettings.ixlScores = [];
+    }
+
+    // Add or update score for this date
+    const existingIndex = parentSettings.ixlScores.findIndex(s => s.date === date);
+    if (existingIndex >= 0) {
+        parentSettings.ixlScores[existingIndex].scores = scores;
+    } else {
+        parentSettings.ixlScores.push({ date, scores });
+        // Sort by date
+        parentSettings.ixlScores.sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
+
+    await saveParentSettings();
+    closeScheduleModal();
+
+    // Refresh the parent dashboard
+    if (window.ParentDashboard) {
+        window.ParentDashboard.showDashboard();
+    }
+}
+
+// Export new functions
+window.recordPracticeDay = recordPracticeDay;
+window.checkDayStreak = checkDayStreak;
+window.renderMonthlyCalendar = renderMonthlyCalendar;
+window.changeCalendarMonth = changeCalendarMonth;
+window.renderIXLProgress = renderIXLProgress;
+window.showAddIXLScore = showAddIXLScore;
+window.saveIXLScore = saveIXLScore;
+window.getGradeFromScore = getGradeFromScore;
+
+// ============================================
 // CURRICULUM & DAILY GOALS MANAGEMENT
 // ============================================
 
@@ -897,7 +1283,7 @@ function renderTodayLearning() {
             </div>
             <div class="daily-stats-row">
                 <span>Today's Accuracy: ${accuracy}%</span>
-                <span>Streak: ${userData.currentStreak} 🔥</span>
+                <span>🔥 ${userData.dayStreak || 0} day streak</span>
             </div>
         </div>
 

@@ -426,6 +426,22 @@ window.ParentDashboard = (function() {
                     </div>
                 </div>
 
+                <!-- Practice Calendar Section -->
+                <div class="parent-section practice-calendar-section">
+                    <h3>📅 Monthly Practice Calendar</h3>
+                    <div id="practiceCalendar">
+                        <!-- Will be populated by renderMonthlyCalendar() -->
+                    </div>
+                </div>
+
+                <!-- IXL Progress Tracker Section -->
+                <div class="parent-section ixl-tracker-section">
+                    <h3>📊 IXL Assessment Progress</h3>
+                    <div id="ixlProgressTracker">
+                        <!-- Will be populated by renderIXLProgress() -->
+                    </div>
+                </div>
+
                 <!-- Curriculum Planner Section -->
                 <div id="curriculumPlanner" class="parent-section">
                     <!-- Will be populated by renderCurriculumPlanner() -->
@@ -450,6 +466,23 @@ window.ParentDashboard = (function() {
         // Render the curriculum planner section
         if (window.renderCurriculumPlanner) {
             window.renderCurriculumPlanner();
+        }
+
+        // Render the practice calendar
+        if (window.renderMonthlyCalendar) {
+            const calendarContainer = document.getElementById('practiceCalendar');
+            if (calendarContainer) {
+                const now = new Date();
+                calendarContainer.innerHTML = window.renderMonthlyCalendar(now.getFullYear(), now.getMonth());
+            }
+        }
+
+        // Render IXL Progress
+        if (window.renderIXLProgress) {
+            const ixlContainer = document.getElementById('ixlProgressTracker');
+            if (ixlContainer) {
+                ixlContainer.innerHTML = window.renderIXLProgress();
+            }
         }
     }
 
