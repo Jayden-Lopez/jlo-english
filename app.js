@@ -140,6 +140,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     initializeTopics();
     updateStats();
     updateDailyProgress();
+    updateGradeDisplay(); // Update the grade level display at top
 
     // Load curriculum and render today's learning plan
     loadCurriculum();
@@ -1110,6 +1111,44 @@ async function saveIXLScore() {
     }
 }
 
+// Update the grade level display at top of page
+function updateGradeDisplay() {
+    const gradeEl = document.getElementById('currentGradeLevel');
+    const progressEl = document.getElementById('gradeProgressFill');
+    const streakEl = document.getElementById('dayStreakDisplay');
+
+    if (!gradeEl) return;
+
+    // Get current level from latest IXL score or userData
+    let currentScore = userData.readingLevel || 460;
+
+    // Check if we have IXL scores
+    if (parentSettings.ixlScores && parentSettings.ixlScores.length > 0) {
+        const latestIXL = parentSettings.ixlScores[parentSettings.ixlScores.length - 1];
+        // Use overall reading score as the primary indicator
+        currentScore = latestIXL.scores.overallReading || latestIXL.scores.overallLanguageArts || currentScore;
+    }
+
+    const currentGrade = getGradeFromScore(currentScore);
+    gradeEl.textContent = currentGrade;
+
+    // Calculate progress toward 6th grade (600 points)
+    // 3rd grade = 300, 4th = 400, 5th = 500, 6th = 600
+    const minScore = 300;
+    const targetScore = 600;
+    const progress = Math.min(Math.max((currentScore - minScore) / (targetScore - minScore) * 100, 0), 100);
+
+    if (progressEl) {
+        progressEl.style.width = progress + '%';
+    }
+
+    // Update day streak display
+    if (streakEl) {
+        const streak = userData.dayStreak || 0;
+        streakEl.textContent = `🔥 ${streak} day streak`;
+    }
+}
+
 // Export new functions
 window.recordPracticeDay = recordPracticeDay;
 window.checkDayStreak = checkDayStreak;
@@ -1119,6 +1158,7 @@ window.renderIXLProgress = renderIXLProgress;
 window.showAddIXLScore = showAddIXLScore;
 window.saveIXLScore = saveIXLScore;
 window.getGradeFromScore = getGradeFromScore;
+window.updateGradeDisplay = updateGradeDisplay;
 
 // ============================================
 // CURRICULUM & DAILY GOALS MANAGEMENT
